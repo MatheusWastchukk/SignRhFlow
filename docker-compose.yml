@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # 1. Nosso Backend Laravel
+  api:
+    build:
+      context: ./signrhflow-api
+      dockerfile: Dockerfile
+    container_name: signrhflow_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./signrhflow-api:/var/www/html
+    depends_on:
+      - db
+      - redis
+    networks:
+      - signrhflow-network
+
+  # 2. Nosso Frontend Angular
+  web:
+    image: node:20
+    container_name: signrhflow_web
+    working_dir: /app
+    volumes:
+      - ./signrhflow-web:/app
+    ports:
+      - "4200:4200"
+    # Instala os pacotes do Node e inicia o servidor Angular
+    command: bash -c "npm install && npx ng serve --host 0.0.0.0 --poll 2000"
+    networks:
+      - signrhflow-network
+
+  # 3. Banco de Dados PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: signrhflow_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: signrhflow
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+    volumes:
+      - signrhflow-db-data:/var/lib/postgresql/data
+    networks:
+      - signrhflow-network
+
+  # 4. Mensageria e Rate Limit (Redis)
+  redis:
+    image: redis:7-alpine
+    container_name: signrhflow_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - signrhflow-redis-data:/data
+    networks:
+      - signrhflow-network
+
+# Cria uma rede interna fechada para segurança
+networks:
+  signrhflow-network:
+    driver: bridge
+
+# Volumes nomeados para não perder dados se o contêiner reiniciar
+volumes:
+  signrhflow-db-data:
+  signrhflow-redis-data:

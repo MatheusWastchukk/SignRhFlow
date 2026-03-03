@@ -1,0 +1,156 @@
+Especificação Técnica: SignRhFlow (Full Stack)
+1. Visão Geral do Projeto
+O SignRhFlow é um portal corporativo de RH para automatizar a admissão de novos funcionários. O sistema permite o cadastro do colaborador, gera um contrato de trabalho em PDF e o envia para assinatura digital via API da Autentique. O backend gerencia o ciclo de vida do documento recebendo webhooks de forma assíncrona, refletindo o status em tempo real no frontend.
+
+2. Stack Tecnológica
+Backend: PHP 8.x + Laravel 11 (API RESTful isolada).
+
+Frontend: Angular 17+ (SPA autônoma).
+
+Banco de Dados: PostgreSQL (Relacional, garantindo integridade e uso avançado do Eloquent).
+
+Mensageria e Cache: Redis (Gerenciamento de filas para webhooks e Rate Limiting).
+
+Infraestrutura e DevSecOps: Docker (via Laravel Sail para desenvolvimento isolado) e GitHub Actions (para simular uma esteira de CI/CD, rodando testes de segurança e qualidade estática).
+
+3. Arquitetura de Integração (O Diferencial do Backend)
+Para impressionar na vaga de backend, sua aplicação não pode simplesmente fazer requisições síncronas. Ela deve seguir os seguintes padrões:
+
+Isolamento do Client GraphQL: O envio de arquivos (multipart/form-data) para a mutation CreateDocumentMutation da Autentique será encapsulado em um Service dedicado.
+
+Tolerância a Falhas e Rate Limit: A API da Autentique limita a 60 requisições/minuto. O envio de contratos será empurrado para o Redis (SendContractJob). Se o limite for atingido, o Laravel usará o RateLimiter para atrasar a execução da fila (delay/release), evitando erros HTTP 429.
+
+Webhooks Resilientes: A rota de recepção de webhooks deve responder em < 200ms. Ela apenas valida a assinatura do payload (se aplicável), insere os dados brutos no banco e dispara um ProcessWebhookJob para atualizar as regras de negócio em background.
+
+4. Modelagem do Banco de Dados (Migrations)
+O banco deve ser estruturado com chaves estrangeiras, índices e soft deletes.
+
+users (Gestores de RH)
+
+id (UUID), name, email (Unique), password, remember_token, timestamps.
+
+employees (Colaboradores)
+
+id (UUID), name, email (Unique), phone, cpf (Unique), timestamps, deleted_at.
+
+contracts (Contratos Gerados)
+
+id (UUID)
+
+employee_id (FK -> employees.id)
+
+autentique_document_id (String, Nullable, Indexado)
+
+status (Enum: DRAFT, PENDING, SIGNED, REJECTED)
+
+delivery_method (Enum: EMAIL, WHATSAPP)
+
+file_path (String) - Caminho do PDF gerado no storage local antes do envio
+
+timestamps, deleted_at.
+
+webhook_logs (Auditoria e Retentativas)
+
+id (BigInt/UUID)
+
+autentique_document_id (String, Indexado)
+
+event_type (String) - Ex: document.signed
+
+payload (JSONB) - Armazenamento otimizado no Postgres
+
+processed (Boolean, default: false)
+
+error_message (Text, Nullable)
+
+timestamps.
+
+5. Passo a Passo de Desenvolvimento (Do Zero ao Deploy Simulado)
+Como você tem apenas o editor de código, seguiremos a via do Docker para não poluir sua máquina.
+
+Fase 1: Infraestrutura e Setup Inicial
+Criar o Backend (Laravel Sail):
+
+Abra o terminal e rode: curl -s "https://laravel.build/signrhflow-api?with=pgsql,redis" | bash.
+
+Entre na pasta cd signrhflow-api e suba os contêineres: ./vendor/bin/sail up -d.
+
+Configurar Variáveis de Ambiente:
+
+No arquivo .env, configure as credenciais da Autentique (crie uma conta no painel deles e gere a chave no ambiente Sandbox):
+AUTENTIQUE_API_TOKEN=sua_chave_aqui
+AUTENTIQUE_GRAPHQL_URL=https://api.autentique.com.br/v2/graphql
+
+Criar o Frontend (Angular):
+
+Em outro terminal, instale o Angular CLI via Docker (ou Node se preferir localmente) e crie o projeto: ng new signrhflow-web. Configure-o para rodar na porta 4200.
+
+Fase 2: Construção da API Core e Banco de Dados
+Migrations e Models:
+
+Gere os arquivos: ./vendor/bin/sail artisan make:model Employee -m, repita para Contract e WebhookLog.
+
+Escreva a estrutura das tabelas descrita no item 4 e rode ./vendor/bin/sail artisan migrate.
+
+Endpoints REST (Controllers e FormRequests):
+
+Crie EmployeeController e ContractController.
+
+Implemente a validação rígida dos dados de entrada usando as classes FormRequest do Laravel (exigindo CPF válido, formato de telefone internacional para o WhatsApp, etc).
+
+Fase 3: O Motor Autentique (O Diferencial da Vaga)
+Geração do PDF:
+
+Instale o pacote barryvdh/laravel-dompdf. Crie uma view HTML (o template do contrato) com variáveis como {{ $employee->name }} e gere o PDF salvando-o em storage/app/contracts.
+
+O Cliente GraphQL (AutentiqueService):
+
+Crie uma classe dedicada em app/Services/AutentiqueService.php.
+
+Implemente a lógica de requisição multipart/form-data utilizando o Http::withToken()->attach() do Laravel.
+
+Requisito de Ouro: Configure no JSON da requisição as security_verifications da Autentique. Adicione a exigência de biometria ("type": "LIVE") para mostrar domínio das funcionalidades de segurança da API.
+
+Filas e Rate Limiting:
+
+Crie um Job: ./vendor/bin/sail artisan make:job SendContractToAutentique.
+
+Mova a chamada do AutentiqueService para dentro deste Job. Implemente a lógica do Redis Rate Limiter no método handle() do Job para respeitar as 60 req/min.
+
+Fase 4: Webhooks e Resiliência
+Endpoint do Webhook:
+
+Crie a rota /api/webhooks/autentique no arquivo routes/api.php (para não sofrer bloqueio do middleware CSRF).
+
+O Controller deve apenas salvar o Request->all() na tabela webhook_logs, retornar HTTP 200 e despachar o ProcessWebhookJob.
+
+Processamento em Background:
+
+O ProcessWebhookJob lerá o log, identificará o status (assinado, rejeitado) e fará um Contract::where('autentique_document_id', $id)->update(['status' => $novo_status]).
+
+Fase 5: O Frontend em Angular
+Serviços HTTP: Crie os services no Angular para se comunicar com sua API Laravel (http://localhost:8000/api).
+
+Telas Principais:
+
+Dashboard: Uma tabela consumindo a listagem de contratos com os status. Use polling (requisições a cada X segundos) ou implemente Server-Sent Events (SSE) / WebSockets se quiser exibir o status mudando em tempo real sem atualizar a página.
+
+Novo Contrato: Um formulário com os dados do colaborador, botão para gerar e enviar.
+
+Fase 6: Polimento Profissional (Para o LinkedIn e Recrutadores)
+Testes Automatizados: Escreva Feature Tests (php artisan make:test ContractFlowTest) no Laravel fazendo o mock do Http::fake() para testar a comunicação com a Autentique sem gastar créditos.
+
+Documentação da API: Adicione a anotação do Swagger (L5-Swagger) ou exporte a coleção completa do Postman.
+
+README Impressionante: Crie um diagrama da arquitetura, explique como rodar o Docker Compose, e destaque as decisões arquiteturais: o isolamento em Jobs, a resiliência do Webhook e o encapsulamento da Mutation GraphQL multipart.
+
+6. Referências Úteis
+Documentação Autentique: https://docs.autentique.com.br/api
+
+Laravel Sail (Docker): https://laravel.com/docs/11.x/sail
+
+Laravel Queues: https://laravel.com/docs/11.x/queues
+
+Http Client Multipart: https://laravel.com/docs/11.x/http-client#multipart-requests
+
+Com esse mapa em mãos, você tem exatamente o que precisa para começar. O primeiro passo prático na sua máquina agora é rodar o comando do Laravel Sail no seu terminal para baixar as imagens do Docker e subir o banco de dados.
