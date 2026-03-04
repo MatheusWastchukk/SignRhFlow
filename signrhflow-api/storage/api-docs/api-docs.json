@@ -1,0 +1,241 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "SignRhFlow API",
+        "description": "Documentacao inicial dos endpoints de colaboradores e contratos.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Servidor local"
+        }
+    ],
+    "paths": {
+        "/api/contracts": {
+            "get": {
+                "tags": [
+                    "Contracts"
+                ],
+                "summary": "Lista contratos",
+                "operationId": "listContracts",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada de contratos"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Contracts"
+                ],
+                "summary": "Cria contrato",
+                "operationId": "storeContract",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "employee_id",
+                                    "delivery_method"
+                                ],
+                                "properties": {
+                                    "employee_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "delivery_method": {
+                                        "type": "string",
+                                        "enum": [
+                                            "EMAIL",
+                                            "WHATSAPP"
+                                        ]
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "DRAFT",
+                                            "PENDING",
+                                            "SIGNED",
+                                            "REJECTED"
+                                        ]
+                                    },
+                                    "file_path": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Contrato criado"
+                    },
+                    "422": {
+                        "description": "Erro de validacao"
+                    }
+                }
+            }
+        },
+        "/api/contracts/{contract}": {
+            "get": {
+                "tags": [
+                    "Contracts"
+                ],
+                "summary": "Detalha contrato por ID",
+                "operationId": "showContract",
+                "parameters": [
+                    {
+                        "name": "contract",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contrato encontrado"
+                    },
+                    "404": {
+                        "description": "Contrato nao encontrado"
+                    }
+                }
+            }
+        },
+        "/api/employees": {
+            "get": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Lista colaboradores",
+                "operationId": "listEmployees",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada de colaboradores"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Cria colaborador",
+                "operationId": "storeEmployee",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "phone",
+                                    "cpf"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Joao Silva"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "joao.silva@example.com"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+5511999999999"
+                                    },
+                                    "cpf": {
+                                        "type": "string",
+                                        "example": "52998224725"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Colaborador criado"
+                    },
+                    "422": {
+                        "description": "Erro de validacao"
+                    }
+                }
+            }
+        },
+        "/api/employees/{employee}": {
+            "get": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Detalha colaborador por ID",
+                "operationId": "showEmployee",
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Colaborador encontrado"
+                    },
+                    "404": {
+                        "description": "Colaborador nao encontrado"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Contracts",
+            "description": "Contracts"
+        },
+        {
+            "name": "Employees",
+            "description": "Employees"
+        }
+    ]
+}
