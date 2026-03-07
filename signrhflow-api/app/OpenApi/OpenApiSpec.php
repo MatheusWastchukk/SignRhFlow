@@ -13,6 +13,9 @@ use OpenApi\Attributes as OA;
     url: 'http://localhost:8000',
     description: 'Servidor local'
 )]
+#[OA\Tag(name: 'Employees', description: 'Gestao de colaboradores')]
+#[OA\Tag(name: 'Contracts', description: 'Gestao de contratos')]
+#[OA\Tag(name: 'Webhooks', description: 'Eventos de integracao externa')]
 class OpenApiSpec
 {
 }

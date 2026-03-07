@@ -13,6 +13,7 @@ class WebhookLog extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'event_hash',
         'autentique_document_id',
         'event_type',
         'payload',

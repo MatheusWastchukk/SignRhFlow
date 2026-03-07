@@ -1,0 +1,49 @@
+<section class="mx-auto max-w-3xl space-y-6">
+  <div class="space-y-2 text-center">
+    <h1 class="text-4xl font-extrabold text-slate-900">Novo contrato</h1>
+    <p class="text-slate-600">Cadastre os dados e dispare o fluxo de assinatura digital.</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div class="grid gap-4 md:grid-cols-2">
+      <label class="block space-y-1 md:col-span-2">
+        <span class="text-sm font-medium text-slate-700">Nome completo</span>
+        <input type="text" formControlName="name" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+      </label>
+
+      <label class="block space-y-1">
+        <span class="text-sm font-medium text-slate-700">E-mail</span>
+        <input type="email" formControlName="email" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+      </label>
+
+      <label class="block space-y-1">
+        <span class="text-sm font-medium text-slate-700">Telefone (formato BR)</span>
+        <input type="text" formControlName="phone" placeholder="(11) 99999-9999" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+      </label>
+
+      <label class="block space-y-1">
+        <span class="text-sm font-medium text-slate-700">CPF</span>
+        <input type="text" formControlName="cpf" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+      </label>
+
+      <label class="block space-y-1">
+        <span class="text-sm font-medium text-slate-700">Método de envio</span>
+        <select formControlName="delivery_method" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+          <option value="EMAIL">EMAIL</option>
+          <option value="WHATSAPP">WHATSAPP</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-900">
+      O contrato será gerado automaticamente em PDF e enviado para assinatura.
+    </div>
+
+    <button type="submit" [disabled]="loading" class="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300">
+      {{ loading ? 'Enviando...' : 'Solicitar assinatura' }}
+    </button>
+  </form>
+
+  <p *ngIf="success" class="rounded-md bg-emerald-100 px-4 py-3 text-sm text-emerald-700">{{ success }}</p>
+  <p *ngIf="error" class="rounded-md bg-rose-100 px-4 py-3 text-sm text-rose-700">{{ error }}</p>
+</section>

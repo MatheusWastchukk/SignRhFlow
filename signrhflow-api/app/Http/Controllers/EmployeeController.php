@@ -24,7 +24,11 @@ class EmployeeController extends Controller
             ),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Lista paginada de colaboradores'),
+            new OA\Response(
+                response: 200,
+                description: 'Lista paginada de colaboradores',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedEmployeesResponse')
+            ),
         ]
     )]
     public function index(Request $request): JsonResponse
@@ -47,14 +51,22 @@ class EmployeeController extends Controller
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Joao Silva'),
                     new OA\Property(property: 'email', type: 'string', format: 'email', example: 'joao.silva@example.com'),
-                    new OA\Property(property: 'phone', type: 'string', example: '+5511999999999'),
+                    new OA\Property(property: 'phone', type: 'string', example: '(11) 99999-9999'),
                     new OA\Property(property: 'cpf', type: 'string', example: '52998224725'),
                 ]
             )
         ),
         responses: [
-            new OA\Response(response: 201, description: 'Colaborador criado'),
-            new OA\Response(response: 422, description: 'Erro de validacao'),
+            new OA\Response(
+                response: 201,
+                description: 'Colaborador criado',
+                content: new OA\JsonContent(ref: '#/components/schemas/EmployeeResource')
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Erro de validacao',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')
+            ),
         ]
     )]
     public function store(StoreEmployeeRequest $request): JsonResponse
@@ -78,7 +90,11 @@ class EmployeeController extends Controller
             ),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Colaborador encontrado'),
+            new OA\Response(
+                response: 200,
+                description: 'Colaborador encontrado',
+                content: new OA\JsonContent(ref: '#/components/schemas/EmployeeResource')
+            ),
             new OA\Response(response: 404, description: 'Colaborador nao encontrado'),
         ]
     )]

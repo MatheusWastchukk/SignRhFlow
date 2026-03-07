@@ -34,7 +34,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Lista paginada de contratos"
+                        "description": "Lista paginada de contratos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedContractsResponse"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -86,10 +93,24 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Contrato criado"
+                        "description": "Contrato criado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ContractResource"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Erro de validacao"
+                        "description": "Erro de validacao",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -114,10 +135,45 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Contrato encontrado"
+                        "description": "Contrato encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ContractResource"
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "description": "Contrato nao encontrado"
+                    }
+                }
+            }
+        },
+        "/api/contracts/{contract}/pdf": {
+            "get": {
+                "tags": [
+                    "Contracts"
+                ],
+                "summary": "Baixa PDF do contrato",
+                "operationId": "downloadContractPdf",
+                "parameters": [
+                    {
+                        "name": "contract",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Arquivo PDF do contrato"
+                    },
+                    "404": {
+                        "description": "PDF nao encontrado"
                     }
                 }
             }
@@ -144,7 +200,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Lista paginada de colaboradores"
+                        "description": "Lista paginada de colaboradores",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedEmployeesResponse"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -177,7 +240,7 @@
                                     },
                                     "phone": {
                                         "type": "string",
-                                        "example": "+5511999999999"
+                                        "example": "(11) 99999-9999"
                                     },
                                     "cpf": {
                                         "type": "string",
@@ -191,10 +254,24 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Colaborador criado"
+                        "description": "Colaborador criado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmployeeResource"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Erro de validacao"
+                        "description": "Erro de validacao",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -219,23 +296,237 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Colaborador encontrado"
+                        "description": "Colaborador encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmployeeResource"
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "description": "Colaborador nao encontrado"
                     }
                 }
             }
+        },
+        "/api/webhooks/autentique": {
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Recebe webhook da Autentique",
+                "operationId": "autentiqueWebhook",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Webhook recebido"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "EmployeeResource": {
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "phone",
+                    "cpf"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "cpf": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ContractResource": {
+                "required": [
+                    "id",
+                    "employee_id",
+                    "status",
+                    "delivery_method",
+                    "file_path"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "employee_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "autentique_document_id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "DRAFT",
+                            "PENDING",
+                            "SIGNED",
+                            "REJECTED"
+                        ]
+                    },
+                    "delivery_method": {
+                        "type": "string",
+                        "enum": [
+                            "EMAIL",
+                            "WHATSAPP"
+                        ]
+                    },
+                    "file_path": {
+                        "type": "string"
+                    },
+                    "employee": {
+                        "$ref": "#/components/schemas/EmployeeResource"
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationError": {
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatorLinks": {
+                "properties": {
+                    "first": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "last": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "prev": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatorMeta": {
+                "properties": {
+                    "current_page": {
+                        "type": "integer"
+                    },
+                    "from": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "last_page": {
+                        "type": "integer"
+                    },
+                    "path": {
+                        "type": "string"
+                    },
+                    "per_page": {
+                        "type": "integer"
+                    },
+                    "to": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatedEmployeesResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EmployeeResource"
+                        }
+                    },
+                    "links": {
+                        "$ref": "#/components/schemas/PaginatorLinks"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/PaginatorMeta"
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatedContractsResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ContractResource"
+                        }
+                    },
+                    "links": {
+                        "$ref": "#/components/schemas/PaginatorLinks"
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/PaginatorMeta"
+                    }
+                },
+                "type": "object"
+            }
         }
     },
     "tags": [
         {
-            "name": "Contracts",
-            "description": "Contracts"
+            "name": "Employees",
+            "description": "Gestao de colaboradores"
         },
         {
-            "name": "Employees",
-            "description": "Employees"
+            "name": "Contracts",
+            "description": "Gestao de contratos"
+        },
+        {
+            "name": "Webhooks",
+            "description": "Eventos de integracao externa"
         }
     ]
 }

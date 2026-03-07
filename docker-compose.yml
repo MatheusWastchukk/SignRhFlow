@@ -17,6 +17,22 @@ services:
     networks:
       - signrhflow-network
 
+  queue:
+    build:
+      context: ./signrhflow-api
+      dockerfile: Dockerfile
+    container_name: signrhflow_queue
+    working_dir: /var/www/html
+    command: php artisan queue:work --queue=contracts,webhooks --tries=5 --sleep=1
+    volumes:
+      - ./signrhflow-api:/var/www/html
+    depends_on:
+      - api
+      - redis
+      - db
+    networks:
+      - signrhflow-network
+
   # 2. Nosso Frontend Angular
   web:
     image: node:20
