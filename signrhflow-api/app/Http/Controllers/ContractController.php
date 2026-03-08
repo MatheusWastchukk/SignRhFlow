@@ -7,10 +7,10 @@ use App\Jobs\SendContractToAutentique;
 use App\Models\Contract;
 use App\Services\ContractPdfService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ContractController extends Controller
 {
@@ -135,7 +135,7 @@ class ContractController extends Controller
             new OA\Response(response: 404, description: 'PDF nao encontrado'),
         ]
     )]
-    public function pdf(Contract $contract): Response|JsonResponse
+    public function pdf(Contract $contract): BinaryFileResponse|JsonResponse
     {
         if (! Storage::disk('local')->exists($contract->file_path)) {
             return response()->json([
