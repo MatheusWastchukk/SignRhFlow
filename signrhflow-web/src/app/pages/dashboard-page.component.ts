@@ -47,6 +47,14 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     return `http://localhost:8000/api/contracts/${contractId}/pdf`;
   }
 
+  signingUrl(token: string | null | undefined): string | null {
+    if (!token) {
+      return null;
+    }
+
+    return `/assinar/${token}`;
+  }
+
   get totalContracts(): number {
     return this.contracts.length;
   }

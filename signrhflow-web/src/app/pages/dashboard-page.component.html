@@ -52,6 +52,7 @@
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Metodo</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Documento Autentique</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">PDF</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-700">Assinatura</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">
@@ -73,6 +74,17 @@
             >
               Abrir PDF
             </a>
+          </td>
+          <td class="px-4 py-3">
+            <a
+              *ngIf="signingUrl(contract.signing_token)"
+              [href]="signingUrl(contract.signing_token)"
+              target="_blank"
+              class="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+            >
+              Abrir link
+            </a>
+            <span *ngIf="!signingUrl(contract.signing_token)" class="text-xs text-slate-500">-</span>
           </td>
         </tr>
       </tbody>

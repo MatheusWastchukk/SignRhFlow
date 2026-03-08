@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Contract extends Model
 {
@@ -36,10 +37,35 @@ class Contract extends Model
     protected $fillable = [
         'employee_id',
         'autentique_document_id',
+        'signing_token',
+        'signing_token_expires_at',
         'status',
         'delivery_method',
         'file_path',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'signing_token_expires_at' => 'datetime',
+        ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $contract): void {
+            if (! is_string($contract->signing_token) || $contract->signing_token === '') {
+                $contract->signing_token = Str::random(64);
+            }
+
+            if ($contract->signing_token_expires_at === null) {
+                $contract->signing_token_expires_at = now()->addDays(7);
+            }
+        });
+    }
 
     public function employee(): BelongsTo
     {

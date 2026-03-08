@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Contract, Employee, PaginatedResponse } from '../models';
+import { Contract, Employee, PaginatedResponse, SigningContextResponse } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -44,5 +44,9 @@ export class ApiService {
     delivery_method: 'EMAIL' | 'WHATSAPP';
   }): Observable<Contract> {
     return this.http.post<Contract>(`${this.baseUrl}/contracts`, payload);
+  }
+
+  getSigningContext(token: string): Observable<SigningContextResponse> {
+    return this.http.get<SigningContextResponse>(`${this.baseUrl}/signing/${token}/context`);
   }
 }
