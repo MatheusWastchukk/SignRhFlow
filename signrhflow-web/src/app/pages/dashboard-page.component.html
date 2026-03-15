@@ -50,6 +50,7 @@
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Colaborador</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Status</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Metodo</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-700">PDF gerado em</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Documento Autentique</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">PDF</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Assinatura</th>
@@ -65,6 +66,7 @@
             </span>
           </td>
           <td class="px-4 py-3 text-slate-700">{{ contract.delivery_method }}</td>
+          <td class="px-4 py-3 text-xs text-slate-700">{{ formatDateTime(contract.pdf_generated_at) }}</td>
           <td class="px-4 py-3 font-mono text-xs text-slate-700">{{ contract.autentique_document_id || '-' }}</td>
           <td class="px-4 py-3">
             <a

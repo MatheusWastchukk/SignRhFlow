@@ -49,4 +49,12 @@ export class ApiService {
   getSigningContext(token: string): Observable<SigningContextResponse> {
     return this.http.get<SigningContextResponse>(`${this.baseUrl}/signing/${token}/context`);
   }
+
+  saveSignerData(token: string, payload: {
+    name: string;
+    email: string;
+    cpf: string;
+  }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/signing/${token}/signer-data`, payload);
+  }
 }

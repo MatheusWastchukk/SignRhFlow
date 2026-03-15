@@ -15,6 +15,7 @@ export interface Contract {
   status: 'DRAFT' | 'PENDING' | 'SIGNED' | 'REJECTED';
   delivery_method: 'EMAIL' | 'WHATSAPP';
   file_path: string;
+  pdf_generated_at?: string | null;
   employee?: Employee;
 }
 
@@ -26,9 +27,15 @@ export interface SigningContextResponse {
     file_path: string;
     pdf_url: string;
     signing_token_expires_at: string | null;
+    signer_data_collected_at: string | null;
   };
   employee: {
     name: string | null;
+  };
+  signer: {
+    name: string | null;
+    email: string | null;
+    cpf: string | null;
   };
 }
 

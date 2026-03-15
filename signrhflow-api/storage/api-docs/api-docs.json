@@ -407,6 +407,11 @@
                     "file_path": {
                         "type": "string"
                     },
+                    "pdf_generated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
                     "employee": {
                         "$ref": "#/components/schemas/EmployeeResource"
                     }

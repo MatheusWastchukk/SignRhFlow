@@ -84,7 +84,10 @@ class ContractController extends Controller
 
         $contract = Contract::query()->create($data);
         $pdfPath = $contractPdfService->generateAndStore($contract);
-        $contract->forceFill(['file_path' => $pdfPath])->save();
+        $contract->forceFill([
+            'file_path' => $pdfPath,
+            'pdf_generated_at' => now(),
+        ])->save();
         SendContractToAutentique::dispatch($contract->id);
 
         return response()->json($contract->load('employee'), 201);
@@ -146,6 +149,38 @@ class ContractController extends Controller
         return response()->download(
             Storage::disk('local')->path($contract->file_path),
             sprintf('contrato-%s.pdf', $contract->id),
+            ['Content-Type' => 'application/pdf']
+        );
+    }
+
+    #[OA\Get(
+        path: '/api/contracts/{contract}/pdf/inline',
+        operationId: 'viewContractPdfInline',
+        summary: 'Visualiza PDF do contrato inline',
+        tags: ['Contracts'],
+        parameters: [
+            new OA\Parameter(
+                name: 'contract',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Arquivo PDF inline'),
+            new OA\Response(response: 404, description: 'PDF nao encontrado'),
+        ]
+    )]
+    public function pdfInline(Contract $contract): BinaryFileResponse|JsonResponse
+    {
+        if (! Storage::disk('local')->exists($contract->file_path)) {
+            return response()->json([
+                'message' => 'PDF do contrato nao encontrado.',
+            ], 404);
+        }
+
+        return response()->file(
+            Storage::disk('local')->path($contract->file_path),
             ['Content-Type' => 'application/pdf']
         );
     }

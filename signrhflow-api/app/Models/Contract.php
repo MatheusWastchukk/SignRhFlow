@@ -39,9 +39,14 @@ class Contract extends Model
         'autentique_document_id',
         'signing_token',
         'signing_token_expires_at',
+        'signer_name',
+        'signer_email',
+        'signer_cpf',
+        'signer_data_collected_at',
         'status',
         'delivery_method',
         'file_path',
+        'pdf_generated_at',
     ];
 
     /**
@@ -51,6 +56,8 @@ class Contract extends Model
     {
         return [
             'signing_token_expires_at' => 'datetime',
+            'signer_data_collected_at' => 'datetime',
+            'pdf_generated_at' => 'datetime',
         ];
     }
 

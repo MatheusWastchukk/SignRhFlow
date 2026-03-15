@@ -26,6 +26,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'status', type: 'string', enum: ['DRAFT', 'PENDING', 'SIGNED', 'REJECTED']),
         new OA\Property(property: 'delivery_method', type: 'string', enum: ['EMAIL', 'WHATSAPP']),
         new OA\Property(property: 'file_path', type: 'string'),
+        new OA\Property(property: 'pdf_generated_at', type: 'string', format: 'date-time', nullable: true),
         new OA\Property(property: 'employee', ref: '#/components/schemas/EmployeeResource'),
     ],
     type: 'object'
