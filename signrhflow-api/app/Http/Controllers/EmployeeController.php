@@ -51,7 +51,7 @@ class EmployeeController extends Controller
                 properties: [
                     new OA\Property(property: 'name', type: 'string', example: 'Joao Silva'),
                     new OA\Property(property: 'email', type: 'string', format: 'email', example: 'joao.silva@example.com'),
-                    new OA\Property(property: 'phone', type: 'string', example: '(11) 99999-9999'),
+                    new OA\Property(property: 'phone', type: 'string', example: '+5511999999999'),
                     new OA\Property(property: 'cpf', type: 'string', example: '52998224725'),
                 ]
             )
@@ -71,7 +71,25 @@ class EmployeeController extends Controller
     )]
     public function store(StoreEmployeeRequest $request): JsonResponse
     {
-        $employee = Employee::query()->create($request->validated());
+        $data = $request->validated();
+
+        $employeeByCpf = Employee::query()->where('cpf', $data['cpf'])->first();
+        $employeeByEmail = Employee::query()->where('email', $data['email'])->first();
+
+        if ($employeeByCpf !== null && $employeeByEmail !== null && $employeeByCpf->id !== $employeeByEmail->id) {
+            return response()->json([
+                'message' => 'Email e CPF pertencem a colaboradores diferentes.',
+            ], 422);
+        }
+
+        $employee = $employeeByCpf ?? $employeeByEmail;
+        if ($employee !== null) {
+            $employee->forceFill($data)->save();
+
+            return response()->json($employee);
+        }
+
+        $employee = Employee::query()->create($data);
 
         return response()->json($employee, 201);
     }

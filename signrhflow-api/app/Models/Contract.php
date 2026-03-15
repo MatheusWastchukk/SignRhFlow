@@ -42,11 +42,14 @@ class Contract extends Model
         'signer_name',
         'signer_email',
         'signer_cpf',
+        'signer_phone',
+        'signer_phone_country',
         'signer_data_collected_at',
         'status',
         'delivery_method',
         'file_path',
         'pdf_generated_at',
+        'signed_at',
     ];
 
     /**
@@ -58,6 +61,7 @@ class Contract extends Model
             'signing_token_expires_at' => 'datetime',
             'signer_data_collected_at' => 'datetime',
             'pdf_generated_at' => 'datetime',
+            'signed_at' => 'datetime',
         ];
     }
 

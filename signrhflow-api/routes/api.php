@@ -22,4 +22,6 @@ Route::get('contracts/{contract}/pdf', [ContractController::class, 'pdf'])->name
 Route::get('contracts/{contract}/pdf/inline', [ContractController::class, 'pdfInline'])->name('contracts.pdf.inline');
 Route::get('signing/{token}/context', [SigningController::class, 'context']);
 Route::post('signing/{token}/signer-data', [SigningController::class, 'signerData']);
+Route::post('signing/{token}/sign', [SigningController::class, 'sign']);
+Route::post('signing/{token}/finalize', [SigningController::class, 'finalize']);
 Route::post('webhooks/autentique', [WebhookController::class, 'autentique']);

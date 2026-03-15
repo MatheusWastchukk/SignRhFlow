@@ -16,6 +16,7 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Employees', description: 'Gestao de colaboradores')]
 #[OA\Tag(name: 'Contracts', description: 'Gestao de contratos')]
 #[OA\Tag(name: 'Webhooks', description: 'Eventos de integracao externa')]
+#[OA\Tag(name: 'Signing', description: 'Fluxo publico de assinatura por token')]
 class OpenApiSpec
 {
 }

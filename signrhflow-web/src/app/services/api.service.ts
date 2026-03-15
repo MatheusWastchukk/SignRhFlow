@@ -54,7 +54,20 @@ export class ApiService {
     name: string;
     email: string;
     cpf: string;
+    phone: string;
+    phone_country: 'BR' | 'US' | 'PT';
   }): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.baseUrl}/signing/${token}/signer-data`, payload);
+  }
+
+  signContract(token: string, payload: { signed_name: string }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/signing/${token}/sign`, payload);
+  }
+
+  finalizeSigning(token: string, payload: {
+    signed_name: string;
+    delivery_method: 'EMAIL' | 'WHATSAPP';
+  }): Observable<{ message: string; signed_at: string; delivery_method: 'EMAIL' | 'WHATSAPP' }> {
+    return this.http.post<{ message: string; signed_at: string; delivery_method: 'EMAIL' | 'WHATSAPP' }>(`${this.baseUrl}/signing/${token}/finalize`, payload);
   }
 }

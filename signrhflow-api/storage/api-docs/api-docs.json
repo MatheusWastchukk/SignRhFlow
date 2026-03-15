@@ -178,6 +178,34 @@
                 }
             }
         },
+        "/api/contracts/{contract}/pdf/inline": {
+            "get": {
+                "tags": [
+                    "Contracts"
+                ],
+                "summary": "Visualiza PDF do contrato inline",
+                "operationId": "viewContractPdfInline",
+                "parameters": [
+                    {
+                        "name": "contract",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Arquivo PDF inline"
+                    },
+                    "404": {
+                        "description": "PDF nao encontrado"
+                    }
+                }
+            }
+        },
         "/api/employees": {
             "get": {
                 "tags": [
@@ -240,7 +268,7 @@
                                     },
                                     "phone": {
                                         "type": "string",
-                                        "example": "(11) 99999-9999"
+                                        "example": "+5511999999999"
                                     },
                                     "cpf": {
                                         "type": "string",
@@ -307,6 +335,377 @@
                     },
                     "404": {
                         "description": "Colaborador nao encontrado"
+                    }
+                }
+            }
+        },
+        "/api/signing/{token}/context": {
+            "get": {
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Carrega contexto da assinatura por token",
+                "operationId": "signingContext",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contexto da assinatura carregado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "contract": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "DRAFT",
+                                                        "PENDING",
+                                                        "SIGNED",
+                                                        "REJECTED"
+                                                    ]
+                                                },
+                                                "delivery_method": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "EMAIL",
+                                                        "WHATSAPP"
+                                                    ]
+                                                },
+                                                "file_path": {
+                                                    "type": "string"
+                                                },
+                                                "pdf_url": {
+                                                    "type": "string"
+                                                },
+                                                "signing_token_expires_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                },
+                                                "signer_data_collected_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                },
+                                                "signed_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "employee": {
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "nullable": true
+                                                },
+                                                "cpf": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "signer": {
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "nullable": true
+                                                },
+                                                "cpf": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "phone_country": {
+                                                    "type": "string",
+                                                    "nullable": true,
+                                                    "enum": [
+                                                        "BR",
+                                                        "US",
+                                                        "PT"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Link de assinatura invalido"
+                    },
+                    "410": {
+                        "description": "Link de assinatura expirado"
+                    }
+                }
+            }
+        },
+        "/api/signing/{token}/signer-data": {
+            "post": {
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Salva dados do signatario",
+                "operationId": "saveSignerData",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "cpf",
+                                    "phone",
+                                    "phone_country"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Joao Silva"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "joao.silva@example.com"
+                                    },
+                                    "cpf": {
+                                        "type": "string",
+                                        "example": "52998224725"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+5511999999999"
+                                    },
+                                    "phone_country": {
+                                        "type": "string",
+                                        "enum": [
+                                            "BR",
+                                            "US",
+                                            "PT"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Dados salvos"
+                    },
+                    "404": {
+                        "description": "Link de assinatura invalido"
+                    },
+                    "410": {
+                        "description": "Link de assinatura expirado"
+                    },
+                    "422": {
+                        "description": "Erro de validacao",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/signing/{token}/sign": {
+            "post": {
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Confirma assinatura digitada",
+                "operationId": "signContractByToken",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "signed_name"
+                                ],
+                                "properties": {
+                                    "signed_name": {
+                                        "type": "string",
+                                        "example": "Joao Silva"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Assinatura confirmada"
+                    },
+                    "404": {
+                        "description": "Link de assinatura invalido"
+                    },
+                    "410": {
+                        "description": "Link de assinatura expirado"
+                    },
+                    "422": {
+                        "description": "Erro de validacao",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/signing/{token}/finalize": {
+            "post": {
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Finaliza assinatura e define canal de recebimento",
+                "operationId": "finalizeContractSigning",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "signed_name",
+                                    "delivery_method"
+                                ],
+                                "properties": {
+                                    "signed_name": {
+                                        "type": "string",
+                                        "example": "Joao Silva"
+                                    },
+                                    "delivery_method": {
+                                        "type": "string",
+                                        "enum": [
+                                            "EMAIL",
+                                            "WHATSAPP"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Assinatura finalizada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "signed_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "delivery_method": {
+                                            "type": "string",
+                                            "enum": [
+                                                "EMAIL",
+                                                "WHATSAPP"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Link de assinatura invalido"
+                    },
+                    "410": {
+                        "description": "Link de assinatura expirado"
+                    },
+                    "422": {
+                        "description": "Erro de validacao",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -408,6 +807,11 @@
                         "type": "string"
                     },
                     "pdf_generated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "signed_at": {
                         "type": "string",
                         "format": "date-time",
                         "nullable": true
@@ -532,6 +936,10 @@
         {
             "name": "Webhooks",
             "description": "Eventos de integracao externa"
+        },
+        {
+            "name": "Signing",
+            "description": "Fluxo publico de assinatura por token"
         }
     ]
 }

@@ -16,6 +16,7 @@ export interface Contract {
   delivery_method: 'EMAIL' | 'WHATSAPP';
   file_path: string;
   pdf_generated_at?: string | null;
+  signed_at?: string | null;
   employee?: Employee;
 }
 
@@ -28,14 +29,20 @@ export interface SigningContextResponse {
     pdf_url: string;
     signing_token_expires_at: string | null;
     signer_data_collected_at: string | null;
+    signed_at?: string | null;
   };
   employee: {
     name: string | null;
+    email: string | null;
+    cpf: string | null;
+    phone: string | null;
   };
   signer: {
     name: string | null;
     email: string | null;
     cpf: string | null;
+    phone: string | null;
+    phone_country: 'BR' | 'US' | 'PT' | null;
   };
 }
 

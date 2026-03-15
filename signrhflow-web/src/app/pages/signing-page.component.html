@@ -46,16 +46,24 @@
         </a>
       </div>
 
-      <div class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-        <iframe
-          [src]="pdfViewerUrl"
-          title="Visualizador de contrato"
-          class="h-[600px] w-full"
-        ></iframe>
+      <div [ngClass]="pdfViewerWrapperClass" class="rounded-xl border border-slate-200 bg-slate-50">
+        <div class="relative h-full">
+          <iframe
+            [src]="pdfViewerUrl"
+            title="Visualizador de contrato"
+            class="h-full w-full"
+          ></iframe>
+
+          <div class="pointer-events-none absolute bottom-16 left-1/2 -translate-x-1/2">
+            <p *ngIf="signedName" class="rounded-md bg-white/90 px-6 py-2 text-center text-2xl italic text-slate-800 shadow">
+              {{ signedName }}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="relative rounded-xl border border-slate-200 bg-white p-6">
+    <div class="rounded-xl border border-slate-200 bg-white p-6">
       <p class="text-sm font-semibold text-slate-700">Área de assinatura</p>
       <p class="mt-1 text-xs text-slate-500">
         Leia o documento acima e assine no campo abaixo.
@@ -73,7 +81,7 @@
       <button
         type="button"
         (click)="openSignatureModal()"
-        class="absolute -top-3 right-4 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:bg-blue-700"
+        class="mt-4 rounded-md bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow transition hover:bg-blue-700"
       >
         Assinar contrato
       </button>
@@ -83,7 +91,7 @@
       <button
         type="button"
         [disabled]="!canFinalize || finalizing"
-        (click)="finalizeAndDownloadSignedPdf()"
+        (click)="openFinalizeModal()"
         class="w-full rounded-md bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
       >
         {{ finalizing ? 'Finalizando...' : 'Finalizar assinatura do contrato' }}
@@ -119,6 +127,7 @@
         <input
           type="email"
           formControlName="email"
+          autocomplete="email"
           class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
         />
       </label>
@@ -132,6 +141,30 @@
           class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
         />
       </label>
+
+      <div class="grid gap-3 md:grid-cols-3">
+        <label class="block space-y-1 md:col-span-1">
+          <span class="text-sm font-medium text-slate-700">Nacionalidade</span>
+          <select
+            formControlName="phone_country"
+            (change)="onPhoneCountryChange()"
+            class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          >
+            <option *ngFor="let option of countryOptions" [value]="option.code">{{ option.label }}</option>
+          </select>
+        </label>
+
+        <label class="block space-y-1 md:col-span-2">
+          <span class="text-sm font-medium text-slate-700">Telefone</span>
+          <input
+            type="text"
+            formControlName="phone"
+            (input)="onPhoneInput($event)"
+            placeholder="Telefone conforme país selecionado"
+            class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          />
+        </label>
+      </div>
 
       <p *ngIf="formError" class="rounded-md bg-rose-100 px-3 py-2 text-sm text-rose-700">{{ formError }}</p>
 
@@ -181,9 +214,52 @@
       <button
         type="button"
         (click)="confirmSignatureModal()"
+        [disabled]="savingSignature"
         class="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
       >
-        Confirmar assinatura
+        {{ savingSignature ? 'Confirmando...' : 'Confirmar assinatura' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showDeliveryModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 px-4">
+  <div class="w-full max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-2xl">
+    <div class="space-y-1">
+      <h2 class="text-xl font-bold text-slate-900">Escolha o canal de recebimento</h2>
+      <p class="text-sm text-slate-600">
+        Selecione como deseja receber o contrato após a finalização.
+      </p>
+    </div>
+
+    <label class="block space-y-1">
+      <span class="text-sm font-medium text-slate-700">Canal</span>
+      <select
+        [(ngModel)]="selectedDeliveryMethod"
+        [ngModelOptions]="{ standalone: true }"
+        class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+      >
+        <option value="EMAIL">E-mail</option>
+        <option value="WHATSAPP">WhatsApp</option>
+      </select>
+    </label>
+
+    <p *ngIf="deliveryError" class="rounded-md bg-rose-100 px-3 py-2 text-sm text-rose-700">{{ deliveryError }}</p>
+
+    <div class="flex gap-2">
+      <button
+        type="button"
+        (click)="cancelFinalizeModal()"
+        class="w-full rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 transition hover:bg-slate-50"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        (click)="confirmFinalizeModal()"
+        class="w-full rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+      >
+        Concluir assinatura
       </button>
     </div>
   </div>
