@@ -91,7 +91,14 @@ GRAPHQL,
         }
 
         if (! $response->successful()) {
-            throw new RuntimeException("Autentique retornou HTTP {$response->status()}.");
+            $responseBody = trim((string) $response->body());
+            $responseBody = $responseBody === '' ? 'sem corpo' : $responseBody;
+            $maxLength = 1200;
+            if (strlen($responseBody) > $maxLength) {
+                $responseBody = substr($responseBody, 0, $maxLength).'...';
+            }
+
+            throw new RuntimeException("Autentique retornou HTTP {$response->status()}: {$responseBody}");
         }
 
         $payload = $response->json();

@@ -82,7 +82,7 @@ class ContractController extends Controller
     public function store(StoreContractRequest $request, ContractPdfService $contractPdfService): JsonResponse
     {
         $data = $request->validated();
-        $data['status'] = $data['status'] ?? Contract::STATUS_DRAFT;
+        $data['status'] = $data['status'] ?? Contract::STATUS_PENDING;
         $data['file_path'] = $data['file_path'] ?? 'contracts/pending.pdf';
 
         $contract = Contract::query()->create($data);

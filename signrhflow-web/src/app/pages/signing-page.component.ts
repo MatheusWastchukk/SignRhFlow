@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../services/api.service';
@@ -14,7 +14,7 @@ import { firstValueFrom } from 'rxjs';
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './signing-page.component.html',
 })
-export class SigningPageComponent implements OnInit {
+export class SigningPageComponent implements OnInit, OnDestroy {
   readonly countryOptions = [
     { code: 'BR', label: 'Brasil (+55)', dialCode: '+55', mask: '(99) 99999-9999' },
     { code: 'US', label: 'Estados Unidos (+1)', dialCode: '+1', mask: '(999) 999-9999' },
@@ -62,17 +62,19 @@ export class SigningPageComponent implements OnInit {
     if (!token) {
       this.loading = false;
       this.error = 'Link de assinatura invalido.';
+      this.setSignerModalVisible(false);
       return;
     }
 
     this.signingToken = token;
+    this.setSignerModalVisible(true);
 
     this.apiService.getSigningContext(token).subscribe({
       next: (context) => {
         this.context = context;
         this.pdfViewerUrl = this.sanitizer.bypassSecurityTrustResourceUrl(context.contract.pdf_url);
         this.detectPdfPageCount(context.contract.pdf_url);
-        this.showSignerModal = true;
+        this.setSignerModalVisible(true);
         this.signerForm.reset({
           name: '',
           email: '',
@@ -113,12 +115,12 @@ export class SigningPageComponent implements OnInit {
     this.apiService.saveSignerData(this.signingToken, {
       name: value.name ?? '',
       email: (value.email ?? '').toLowerCase(),
-      cpf: value.cpf ?? '',
+      cpf: this.normalizeCpfDigits(value.cpf ?? ''),
       phone_country: country,
       phone: this.toE164(country, value.phone ?? ''),
     }).subscribe({
       next: () => {
-        this.showSignerModal = false;
+        this.setSignerModalVisible(false);
         this.savingSignerData = false;
         this.signatureDraft = this.signerForm.getRawValue().name ?? '';
       },
@@ -134,6 +136,10 @@ export class SigningPageComponent implements OnInit {
         this.savingSignerData = false;
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.unlockPageScroll();
   }
 
   openSignatureModal(): void {
@@ -301,8 +307,26 @@ export class SigningPageComponent implements OnInit {
     this.signerForm.patchValue({ phone: input.value }, { emitEvent: false });
   }
 
+  onCpfInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    input.value = this.maskCpf(this.normalizeCpfDigits(input.value));
+    this.signerForm.patchValue({ cpf: input.value }, { emitEvent: false });
+  }
+
   private normalizePhoneDigits(value: string): string {
     return (value ?? '').replace(/\D/g, '');
+  }
+
+  private normalizeCpfDigits(value: string): string {
+    return (value ?? '').replace(/\D/g, '').slice(0, 11);
+  }
+
+  private maskCpf(digits: string): string {
+    const list = digits.slice(0, 11);
+    if (list.length <= 3) return list;
+    if (list.length <= 6) return `${list.slice(0, 3)}.${list.slice(3)}`;
+    if (list.length <= 9) return `${list.slice(0, 3)}.${list.slice(3, 6)}.${list.slice(6)}`;
+    return `${list.slice(0, 3)}.${list.slice(3, 6)}.${list.slice(6, 9)}-${list.slice(9, 11)}`;
   }
 
   private maskPhoneForCountry(digits: string, country: 'BR' | 'US' | 'PT'): string {
@@ -351,5 +375,19 @@ export class SigningPageComponent implements OnInit {
     } catch {
       this.pdfPageCount = 1;
     }
+  }
+
+  private setSignerModalVisible(visible: boolean): void {
+    this.showSignerModal = visible;
+    if (visible) {
+      document.body.style.overflow = 'hidden';
+      return;
+    }
+
+    this.unlockPageScroll();
+  }
+
+  private unlockPageScroll(): void {
+    document.body.style.overflow = '';
   }
 }

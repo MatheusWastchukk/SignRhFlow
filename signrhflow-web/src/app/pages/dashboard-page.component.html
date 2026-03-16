@@ -52,7 +52,7 @@
           <td class="px-4 py-3 text-slate-700">{{ contract.delivery_method }}</td>
           <td class="px-4 py-3 text-xs text-slate-700">{{ formatDateTime(contract.pdf_generated_at) }}</td>
           <td class="px-4 py-3 text-xs text-slate-700">{{ formatDateTime(contract.signed_at) }}</td>
-          <td class="px-4 py-3 font-mono text-xs text-slate-700">{{ contract.autentique_document_id || '-' }}</td>
+          <td class="px-4 py-3 font-mono text-xs text-slate-700">{{ documentAutentiqueLabel(contract) }}</td>
           <td class="px-4 py-3 whitespace-nowrap">
             <a
               [href]="pdfUrl(contract.id)"
@@ -268,7 +268,7 @@
       </div>
       <div>
         <dt class="font-medium text-slate-500">Documento Autentique</dt>
-        <dd class="font-mono text-xs text-slate-800">{{ viewContract.autentique_document_id || '-' }}</dd>
+        <dd class="font-mono text-xs text-slate-800">{{ documentAutentiqueLabel(viewContract) }}</dd>
       </div>
       <div>
         <dt class="font-medium text-slate-500">Nome</dt>

@@ -43,10 +43,15 @@ class SendContractToAutentique implements ShouldQueue
 
         $result = $autentiqueService->createDocument($contract);
 
-        $contract->forceFill([
+        $payload = [
             'autentique_document_id' => $result['document_id'],
-            'status' => Contract::STATUS_PENDING,
-        ])->save();
+        ];
+
+        if ($contract->status === Contract::STATUS_DRAFT) {
+            $payload['status'] = Contract::STATUS_PENDING;
+        }
+
+        $contract->forceFill($payload)->save();
     }
 
     public function failed(?Throwable $exception): void

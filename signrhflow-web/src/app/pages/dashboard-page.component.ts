@@ -130,6 +130,18 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  documentAutentiqueLabel(contract: Contract): string {
+    if (contract.autentique_document_id) {
+      return contract.autentique_document_id;
+    }
+
+    if (contract.status === 'PENDING' || contract.status === 'DRAFT') {
+      return 'Aguardando processamento';
+    }
+
+    return '-';
+  }
+
   openEditModal(contract: Contract): void {
     this.editError = '';
     this.editSuccess = '';
