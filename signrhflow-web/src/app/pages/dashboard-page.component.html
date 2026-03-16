@@ -1,22 +1,4 @@
 <section class="space-y-8">
-  <div class="mx-auto max-w-4xl space-y-4 py-8 text-center">
-    <h1 class="text-4xl font-extrabold leading-tight text-slate-900 md:text-5xl">
-      Assine e solicite <span class="text-blue-600">assinatura eletrônica</span><br />
-      de contratos e outros documentos
-    </h1>
-    <p class="mx-auto max-w-2xl text-lg text-slate-600">
-      Simplifique a gestão dos seus contratos com um fluxo rápido, moderno e integrado.
-    </p>
-    <div class="flex items-center justify-center gap-3">
-      <a routerLink="/contracts/new" class="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">
-        Como funciona
-      </a>
-      <button type="button" class="rounded-md bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50">
-        Planos
-      </button>
-    </div>
-  </div>
-
   <div class="grid gap-4 md:grid-cols-3">
     <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
       <p class="text-sm text-slate-500">Total de contratos</p>
@@ -70,21 +52,21 @@
           <td class="px-4 py-3 text-xs text-slate-700">{{ formatDateTime(contract.pdf_generated_at) }}</td>
           <td class="px-4 py-3 text-xs text-slate-700">{{ formatDateTime(contract.signed_at) }}</td>
           <td class="px-4 py-3 font-mono text-xs text-slate-700">{{ contract.autentique_document_id || '-' }}</td>
-          <td class="px-4 py-3">
+          <td class="px-4 py-3 whitespace-nowrap">
             <a
               [href]="pdfUrl(contract.id)"
               target="_blank"
-              class="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+              class="inline-flex whitespace-nowrap rounded-md bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
             >
               Abrir PDF
             </a>
           </td>
-          <td class="px-4 py-3">
+          <td class="px-4 py-3 whitespace-nowrap">
             <a
               *ngIf="signingUrl(contract.signing_token)"
               [href]="signingUrl(contract.signing_token)"
               target="_blank"
-              class="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+              class="inline-flex whitespace-nowrap rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
             >
               Abrir link
             </a>

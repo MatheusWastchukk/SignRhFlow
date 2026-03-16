@@ -21,6 +21,10 @@ export class AppComponent {
     return this.authService.isAuthenticated();
   }
 
+  get isSigningRoute(): boolean {
+    return this.router.url.startsWith('/assinar/');
+  }
+
   logout(): void {
     this.apiService.logout().subscribe({
       next: () => {
