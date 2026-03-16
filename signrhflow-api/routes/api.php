@@ -17,7 +17,7 @@ Route::prefix('auth')->group(function (): void {
 });
 
 Route::apiResource('employees', EmployeeController::class)->only(['index', 'store', 'show']);
-Route::apiResource('contracts', ContractController::class)->only(['index', 'store', 'show']);
+Route::apiResource('contracts', ContractController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
 Route::get('contracts/{contract}/pdf', [ContractController::class, 'pdf'])->name('contracts.pdf');
 Route::get('contracts/{contract}/pdf/inline', [ContractController::class, 'pdfInline'])->name('contracts.pdf.inline');
 Route::get('signing/{token}/context', [SigningController::class, 'context']);

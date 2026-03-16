@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreContractRequest;
 use App\Jobs\SendContractToAutentique;
 use App\Models\Contract;
+use App\Rules\ValidCpf;
 use App\Services\ContractPdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -118,6 +121,81 @@ class ContractController extends Controller
     public function show(Contract $contract): JsonResponse
     {
         return response()->json($contract->load('employee'));
+    }
+
+    public function update(Request $request, Contract $contract): JsonResponse
+    {
+        $employee = $contract->employee()->first();
+
+        if ($employee === null) {
+            return response()->json([
+                'message' => 'Contrato sem colaborador vinculado.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'status' => [
+                'sometimes',
+                'string',
+                Rule::in([
+                    Contract::STATUS_DRAFT,
+                    Contract::STATUS_PENDING,
+                    Contract::STATUS_SIGNED,
+                    Contract::STATUS_REJECTED,
+                ]),
+            ],
+            'delivery_method' => [
+                'sometimes',
+                'string',
+                Rule::in([Contract::DELIVERY_EMAIL, Contract::DELIVERY_WHATSAPP]),
+            ],
+            'employee' => ['required', 'array'],
+            'employee.name' => ['required', 'string', 'max:255'],
+            'employee.email' => [
+                'required',
+                'string',
+                'email:rfc,dns',
+                'max:255',
+                Rule::unique('employees', 'email')->ignore($employee->id),
+            ],
+            'employee.phone' => ['required', 'string', 'regex:/^\+[1-9]\d{7,14}$/'],
+            'employee.cpf' => [
+                'required',
+                'string',
+                new ValidCpf(),
+                Rule::unique('employees', 'cpf')->ignore($employee->id),
+            ],
+        ]);
+
+        DB::transaction(function () use ($validated, $contract, $employee): void {
+            $employeePayload = $validated['employee'];
+            $employeePayload['email'] = mb_strtolower(trim((string) $employeePayload['email']));
+            $employeePayload['cpf'] = preg_replace('/\D/', '', (string) $employeePayload['cpf']);
+            $employeePayload['phone'] = preg_replace('/(?!^\+)\D/', '', trim((string) $employeePayload['phone'])) ?? '';
+            $employee->forceFill($employeePayload)->save();
+
+            $contractPayload = [];
+            if (array_key_exists('status', $validated)) {
+                $contractPayload['status'] = $validated['status'];
+            }
+            if (array_key_exists('delivery_method', $validated)) {
+                $contractPayload['delivery_method'] = $validated['delivery_method'];
+            }
+            if ($contractPayload !== []) {
+                $contract->forceFill($contractPayload)->save();
+            }
+        });
+
+        return response()->json($contract->fresh()->load('employee'));
+    }
+
+    public function destroy(Contract $contract): JsonResponse
+    {
+        $contract->delete();
+
+        return response()->json([
+            'message' => 'Contrato excluido com sucesso.',
+        ]);
     }
 
     #[OA\Get(

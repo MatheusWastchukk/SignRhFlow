@@ -37,6 +37,7 @@
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Documento Autentique</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">PDF</th>
           <th class="px-4 py-3 text-left font-semibold text-slate-700">Assinatura</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-700">Ações</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">
@@ -72,8 +73,229 @@
             </a>
             <span *ngIf="!signingUrl(contract.signing_token)" class="text-xs text-slate-500">-</span>
           </td>
+          <td class="px-4 py-3 whitespace-nowrap">
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="openEditModal(contract)"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-blue-50 text-blue-700 transition hover:bg-blue-100"
+                title="Editar contrato"
+                aria-label="Editar contrato"
+              >
+                <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                (click)="openViewModal(contract)"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100"
+                title="Ver contrato"
+                aria-label="Ver contrato"
+              >
+                <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                (click)="deleteContract(contract)"
+                [disabled]="deletingId === contract.id"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-rose-50 text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                title="Excluir contrato"
+                aria-label="Excluir contrato"
+              >
+                <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2">
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M19 6l-1 14H6L5 6" />
+                  <path d="M10 11v6M14 11v6" />
+                </svg>
+              </button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
+
+  <p *ngIf="editSuccess" class="rounded-md bg-emerald-100 px-4 py-3 text-sm text-emerald-700">
+    {{ editSuccess }}
+  </p>
 </section>
+
+<div *ngIf="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4">
+  <div class="w-full max-w-2xl space-y-4 rounded-2xl bg-white p-6 shadow-2xl">
+    <div class="space-y-1">
+      <h2 class="text-xl font-bold text-slate-900">Editar contrato</h2>
+      <p class="text-sm text-slate-600">
+        Visualize e ajuste os dados do contrato e do colaborador.
+      </p>
+    </div>
+
+    <div class="grid gap-3 md:grid-cols-2">
+      <label class="block space-y-1">
+        <span class="text-sm font-medium text-slate-700">Status</span>
+        <select
+          [(ngModel)]="editModel.status"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        >
+          <option value="DRAFT">DRAFT</option>
+          <option value="PENDING">PENDING</option>
+          <option value="SIGNED">SIGNED</option>
+          <option value="REJECTED">REJECTED</option>
+        </select>
+      </label>
+
+      <label class="block space-y-1">
+        <span class="text-sm font-medium text-slate-700">Método</span>
+        <select
+          [(ngModel)]="editModel.delivery_method"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        >
+          <option value="EMAIL">EMAIL</option>
+          <option value="WHATSAPP">WHATSAPP</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="grid gap-3 md:grid-cols-2">
+      <label class="block space-y-1 md:col-span-2">
+        <span class="text-sm font-medium text-slate-700">Nome</span>
+        <input
+          type="text"
+          [(ngModel)]="editModel.employee_name"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        />
+      </label>
+
+      <label class="block space-y-1">
+        <span class="text-sm font-medium text-slate-700">E-mail</span>
+        <input
+          type="email"
+          [(ngModel)]="editModel.employee_email"
+          [ngModelOptions]="{ standalone: true }"
+          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        />
+      </label>
+
+      <div class="grid gap-3">
+        <span class="text-sm font-medium text-slate-700">Telefone</span>
+        <div class="grid grid-cols-12 gap-2">
+          <select
+            [(ngModel)]="editModel.employee_phone_country"
+            [ngModelOptions]="{ standalone: true }"
+            (change)="onEditPhoneCountryChange()"
+            class="col-span-5 rounded-md border border-slate-300 px-2 py-2 text-sm focus:border-blue-500 focus:outline-none md:col-span-4"
+          >
+            <option *ngFor="let option of countryOptions" [value]="option.code">
+              {{ option.label }}
+            </option>
+          </select>
+
+          <input
+            type="text"
+            [(ngModel)]="editModel.employee_phone"
+            [ngModelOptions]="{ standalone: true }"
+            (input)="onEditPhoneInput($event)"
+            placeholder="Telefone"
+            class="col-span-7 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none md:col-span-8"
+          />
+        </div>
+      </div>
+
+      <label class="block space-y-1 md:col-span-2">
+        <span class="text-sm font-medium text-slate-700">CPF</span>
+        <input
+          type="text"
+          [(ngModel)]="editModel.employee_cpf"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="00000000000"
+          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        />
+      </label>
+    </div>
+
+    <p *ngIf="editError" class="rounded-md bg-rose-100 px-3 py-2 text-sm text-rose-700">{{ editError }}</p>
+
+    <div class="flex gap-2">
+      <button
+        type="button"
+        (click)="closeEditModal()"
+        [disabled]="editing"
+        class="w-full rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 transition hover:bg-slate-50 disabled:cursor-not-allowed"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        (click)="saveContractEdit()"
+        [disabled]="editing"
+        class="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+      >
+        {{ editing ? 'Salvando...' : 'Salvar alterações' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showViewModal && viewContract" class="fixed inset-0 z-[55] flex items-center justify-center bg-slate-900/60 px-4">
+  <div class="w-full max-w-2xl space-y-4 rounded-2xl bg-white p-6 shadow-2xl">
+    <div class="space-y-1">
+      <h2 class="text-xl font-bold text-slate-900">Detalhes do contrato</h2>
+      <p class="text-sm text-slate-600">Visualização rápida dos dados atuais.</p>
+    </div>
+
+    <dl class="grid gap-3 text-sm md:grid-cols-2">
+      <div>
+        <dt class="font-medium text-slate-500">Contrato</dt>
+        <dd class="font-mono text-xs text-slate-800">{{ viewContract.id }}</dd>
+      </div>
+      <div>
+        <dt class="font-medium text-slate-500">Status</dt>
+        <dd class="text-slate-800">{{ viewContract.status }}</dd>
+      </div>
+      <div>
+        <dt class="font-medium text-slate-500">Método</dt>
+        <dd class="text-slate-800">{{ viewContract.delivery_method }}</dd>
+      </div>
+      <div>
+        <dt class="font-medium text-slate-500">Documento Autentique</dt>
+        <dd class="font-mono text-xs text-slate-800">{{ viewContract.autentique_document_id || '-' }}</dd>
+      </div>
+      <div>
+        <dt class="font-medium text-slate-500">Nome</dt>
+        <dd class="text-slate-800">{{ viewContract.employee?.name || '-' }}</dd>
+      </div>
+      <div>
+        <dt class="font-medium text-slate-500">E-mail</dt>
+        <dd class="text-slate-800">{{ viewContract.employee?.email || '-' }}</dd>
+      </div>
+      <div>
+        <dt class="font-medium text-slate-500">Telefone</dt>
+        <dd class="text-slate-800">{{ viewContract.employee?.phone || '-' }}</dd>
+      </div>
+      <div>
+        <dt class="font-medium text-slate-500">CPF</dt>
+        <dd class="text-slate-800">{{ viewContract.employee?.cpf || '-' }}</dd>
+      </div>
+    </dl>
+
+    <div class="flex justify-end">
+      <button
+        type="button"
+        (click)="closeViewModal()"
+        class="rounded-md bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+      >
+        Fechar
+      </button>
+    </div>
+  </div>
+</div>
