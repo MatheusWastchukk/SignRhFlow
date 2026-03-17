@@ -5,7 +5,6 @@ import { ApiService } from '../services/api.service';
 import { SigningContextResponse } from '../models';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -209,10 +208,10 @@ export class SigningPageComponent implements OnInit, OnDestroy {
     }
 
     this.showDeliveryModal = false;
-    await this.finalizeAndDownloadSignedPdf(this.selectedDeliveryMethod);
+    await this.finalizeSigning(this.selectedDeliveryMethod);
   }
 
-  async finalizeAndDownloadSignedPdf(deliveryMethod: 'EMAIL' | 'WHATSAPP'): Promise<void> {
+  async finalizeSigning(deliveryMethod: 'EMAIL' | 'WHATSAPP'): Promise<void> {
     if (!this.context || !this.canFinalize || this.finalizing) {
       return;
     }
@@ -222,59 +221,15 @@ export class SigningPageComponent implements OnInit, OnDestroy {
     this.finalizeSuccess = '';
 
     try {
-      const response = await fetch(this.context.contract.pdf_url);
-      if (!response.ok) {
-        throw new Error('Falha ao carregar PDF original.');
-      }
-
-      const originalBytes = await response.arrayBuffer();
-      const pdfDoc = await PDFDocument.load(originalBytes);
-      const pages = pdfDoc.getPages();
-      const targetPage = pages[pages.length - 1];
-      const { width } = targetPage.getSize();
-      const font = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
-      const signatureText = this.signedName;
-      const signatureSize = 22;
-      const signatureWidth = font.widthOfTextAtSize(signatureText, signatureSize);
-      const signatureX = Math.max(40, (width - signatureWidth) / 2);
-
-      targetPage.drawText(signatureText, {
-        x: signatureX,
-        y: 80,
-        size: signatureSize,
-        font,
-        color: rgb(0.08, 0.14, 0.31),
-      });
-
-      const stampText = `Assinado digitalmente em ${new Date().toLocaleString('pt-BR')}`;
-      const stampSize = 10;
-      const stampWidth = font.widthOfTextAtSize(stampText, stampSize);
-      targetPage.drawText(`Assinado digitalmente em ${new Date().toLocaleString('pt-BR')}`, {
-        x: Math.max(40, (width - stampWidth) / 2),
-        y: 52,
-        size: stampSize,
-        font,
-        color: rgb(0.3, 0.33, 0.4),
-      });
-
-      const signedBytes = await pdfDoc.save();
-      const blob = new Blob([signedBytes], { type: 'application/pdf' });
-      const objectUrl = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = objectUrl;
-      anchor.download = `contrato-assinado-${this.context.contract.id}.pdf`;
-      anchor.click();
-      URL.revokeObjectURL(objectUrl);
-
       const finalizeResponse = await firstValueFrom(this.apiService.finalizeSigning(this.signingToken, {
         signed_name: this.signedName,
         delivery_method: deliveryMethod,
       }));
 
-      this.finalizeSuccess = 'Assinatura finalizada e documento assinado baixado.';
+      this.finalizeSuccess = finalizeResponse.message || 'Solicitacao concluida com sucesso.';
       if (this.context) {
-        this.context.contract.status = 'SIGNED';
-        this.context.contract.signed_at = finalizeResponse.signed_at ?? new Date().toISOString();
+        this.context.contract.status = finalizeResponse.status ?? 'PENDING';
+        this.context.contract.signed_at = finalizeResponse.signed_at ?? null;
         this.context.contract.delivery_method = finalizeResponse.delivery_method ?? deliveryMethod;
       }
     } catch (error) {

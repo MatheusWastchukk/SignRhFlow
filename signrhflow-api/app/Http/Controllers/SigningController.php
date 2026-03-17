@@ -349,17 +349,21 @@ class SigningController extends Controller
             'delivery_method' => ['required', 'string', Rule::in([Contract::DELIVERY_EMAIL, Contract::DELIVERY_WHATSAPP])],
         ]);
 
+        $nextStatus = in_array($contract->status, [Contract::STATUS_SIGNED, Contract::STATUS_REJECTED], true)
+            ? $contract->status
+            : Contract::STATUS_PENDING;
+
         $contract->forceFill([
-            'status' => Contract::STATUS_SIGNED,
-            'signed_at' => now(),
+            'status' => $nextStatus,
             'signer_name' => $validated['signed_name'],
             'delivery_method' => $validated['delivery_method'],
         ])->save();
 
         return response()->json([
-            'message' => 'Contrato assinado com sucesso.',
+            'message' => 'Solicitacao concluida. Aguarde a confirmacao de assinatura pela Autentique.',
             'signed_at' => $contract->signed_at,
             'delivery_method' => $contract->delivery_method,
+            'status' => $contract->status,
         ]);
     }
 

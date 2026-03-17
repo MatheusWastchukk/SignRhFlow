@@ -84,7 +84,17 @@ export class ApiService {
   finalizeSigning(token: string, payload: {
     signed_name: string;
     delivery_method: 'EMAIL' | 'WHATSAPP';
-  }): Observable<{ message: string; signed_at: string; delivery_method: 'EMAIL' | 'WHATSAPP' }> {
-    return this.http.post<{ message: string; signed_at: string; delivery_method: 'EMAIL' | 'WHATSAPP' }>(`${this.baseUrl}/signing/${token}/finalize`, payload);
+  }): Observable<{
+    message: string;
+    signed_at: string | null;
+    delivery_method: 'EMAIL' | 'WHATSAPP';
+    status: 'DRAFT' | 'PENDING' | 'SIGNED' | 'REJECTED';
+  }> {
+    return this.http.post<{
+      message: string;
+      signed_at: string | null;
+      delivery_method: 'EMAIL' | 'WHATSAPP';
+      status: 'DRAFT' | 'PENDING' | 'SIGNED' | 'REJECTED';
+    }>(`${this.baseUrl}/signing/${token}/finalize`, payload);
   }
 }
