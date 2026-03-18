@@ -12,7 +12,7 @@ use RuntimeException;
 class AutentiqueService
 {
     /**
-     * @return array{document_id: string}
+     * @return array{document_id: string, signing_url: string|null}
      */
     public function createDocument(Contract $contract): array
     {
@@ -47,7 +47,15 @@ class AutentiqueService
             throw new RuntimeException("Resposta da Autentique sem document_id: {$this->payloadSnippet($payload)}");
         }
 
-        return ['document_id' => $documentId];
+        $signingUrl = data_get($payload, 'data.createDocument.signatures.0.link.short_link');
+        if (is_string($signingUrl) && $signingUrl !== '' && ! str_starts_with($signingUrl, 'http')) {
+            $signingUrl = 'https://'.$signingUrl;
+        }
+
+        return [
+            'document_id' => $documentId,
+            'signing_url' => is_string($signingUrl) && $signingUrl !== '' ? $signingUrl : null,
+        ];
     }
 
     /**
@@ -72,6 +80,12 @@ class AutentiqueService
 mutation CreateDocument($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!) {
   createDocument(document: $document, signers: $signers, file: $file) {
     id
+    signatures {
+      public_id
+      link {
+        short_link
+      }
+    }
   }
 }
 GRAPHQL,

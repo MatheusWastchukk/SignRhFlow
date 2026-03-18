@@ -23,6 +23,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'id', type: 'string', format: 'uuid'),
         new OA\Property(property: 'employee_id', type: 'string', format: 'uuid'),
         new OA\Property(property: 'autentique_document_id', type: 'string', nullable: true),
+        new OA\Property(property: 'autentique_signing_url', type: 'string', nullable: true),
         new OA\Property(property: 'status', type: 'string', enum: ['DRAFT', 'PENDING', 'SIGNED', 'REJECTED']),
         new OA\Property(property: 'delivery_method', type: 'string', enum: ['EMAIL', 'WHATSAPP']),
         new OA\Property(property: 'file_path', type: 'string'),

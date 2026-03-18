@@ -391,6 +391,10 @@
                                                 "pdf_url": {
                                                     "type": "string"
                                                 },
+                                                "autentique_signing_url": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
                                                 "signing_token_expires_at": {
                                                     "type": "string",
                                                     "format": "date-time",
@@ -643,13 +647,13 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "signed_name",
                                     "delivery_method"
                                 ],
                                 "properties": {
                                     "signed_name": {
                                         "type": "string",
-                                        "example": "Joao Silva"
+                                        "example": "Joao Silva",
+                                        "nullable": true
                                     },
                                     "delivery_method": {
                                         "type": "string",
@@ -784,6 +788,10 @@
                         "format": "uuid"
                     },
                     "autentique_document_id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "autentique_signing_url": {
                         "type": "string",
                         "nullable": true
                     },

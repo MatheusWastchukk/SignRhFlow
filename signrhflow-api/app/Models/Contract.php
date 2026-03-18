@@ -37,6 +37,7 @@ class Contract extends Model
     protected $fillable = [
         'employee_id',
         'autentique_document_id',
+        'autentique_signing_url',
         'signing_token',
         'signing_token_expires_at',
         'signer_name',

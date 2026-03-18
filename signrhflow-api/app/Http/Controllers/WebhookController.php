@@ -26,8 +26,8 @@ class WebhookController extends Controller
     public function autentique(Request $request): JsonResponse
     {
         $payload = $request->all();
-        $eventType = (string) data_get($payload, 'event_type', data_get($payload, 'event', 'unknown'));
-        $documentId = (string) data_get($payload, 'data.id', data_get($payload, 'document.id', 'unknown'));
+        $eventType = $this->resolveEventType($payload);
+        $documentId = $this->resolveDocumentId($payload);
         $eventHash = hash('sha256', json_encode($payload));
 
         $webhookLog = WebhookLog::query()->firstOrCreate(
@@ -48,5 +48,38 @@ class WebhookController extends Controller
             'received' => true,
             'duplicate' => ! $webhookLog->wasRecentlyCreated,
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function resolveEventType(array $payload): string
+    {
+        $eventType = (string) data_get($payload, 'event_type', data_get($payload, 'event', ''));
+        if ($eventType !== '') {
+            return $eventType;
+        }
+
+        if (data_get($payload, 'partes.0.assinado.created') !== null) {
+            return 'signed';
+        }
+        if (data_get($payload, 'partes.0.recusado.created') !== null || data_get($payload, 'partes.0.rejeitado.created') !== null) {
+            return 'rejected';
+        }
+        if (data_get($payload, 'partes.0.visualizado.created') !== null || data_get($payload, 'partes.0.mail.sent') !== null) {
+            return 'pending';
+        }
+
+        return 'unknown';
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function resolveDocumentId(array $payload): string
+    {
+        $documentId = (string) data_get($payload, 'data.id', data_get($payload, 'document.id', data_get($payload, 'documento.uuid', '')));
+
+        return $documentId !== '' ? $documentId : 'unknown';
     }
 }

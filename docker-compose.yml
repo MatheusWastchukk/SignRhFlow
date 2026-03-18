@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 1. Nosso Backend Laravel
   api:
     build:
       context: ./signrhflow-api
@@ -33,7 +32,6 @@ services:
     networks:
       - signrhflow-network
 
-  # 2. Nosso Frontend Angular
   web:
     image: node:20
     container_name: signrhflow_web
@@ -42,12 +40,10 @@ services:
       - ./signrhflow-web:/app
     ports:
       - "4200:4200"
-    # Instala os pacotes do Node e inicia o servidor Angular
     command: bash -c "npm install && npx ng serve --host 0.0.0.0 --poll 2000"
     networks:
       - signrhflow-network
 
-  # 3. Banco de Dados PostgreSQL
   db:
     image: postgres:16-alpine
     container_name: signrhflow_db
@@ -62,7 +58,6 @@ services:
     networks:
       - signrhflow-network
 
-  # 4. Mensageria e Rate Limit (Redis)
   redis:
     image: redis:7-alpine
     container_name: signrhflow_redis
@@ -73,12 +68,10 @@ services:
     networks:
       - signrhflow-network
 
-# Cria uma rede interna fechada para segurança
 networks:
   signrhflow-network:
     driver: bridge
 
-# Volumes nomeados para não perder dados se o contêiner reiniciar
 volumes:
   signrhflow-db-data:
   signrhflow-redis-data:

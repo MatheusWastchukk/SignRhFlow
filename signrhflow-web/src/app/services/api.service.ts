@@ -77,12 +77,8 @@ export class ApiService {
     return this.http.post<{ message: string }>(`${this.baseUrl}/signing/${token}/signer-data`, payload);
   }
 
-  signContract(token: string, payload: { signed_name: string }): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.baseUrl}/signing/${token}/sign`, payload);
-  }
-
   finalizeSigning(token: string, payload: {
-    signed_name: string;
+    signed_name?: string;
     delivery_method: 'EMAIL' | 'WHATSAPP';
   }): Observable<{
     message: string;

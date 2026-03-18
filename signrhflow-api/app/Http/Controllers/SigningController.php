@@ -40,6 +40,7 @@ class SigningController extends Controller
                                 new OA\Property(property: 'delivery_method', type: 'string', enum: ['EMAIL', 'WHATSAPP']),
                                 new OA\Property(property: 'file_path', type: 'string'),
                                 new OA\Property(property: 'pdf_url', type: 'string'),
+                                new OA\Property(property: 'autentique_signing_url', type: 'string', nullable: true),
                                 new OA\Property(property: 'signing_token_expires_at', type: 'string', format: 'date-time', nullable: true),
                                 new OA\Property(property: 'signer_data_collected_at', type: 'string', format: 'date-time', nullable: true),
                                 new OA\Property(property: 'signed_at', type: 'string', format: 'date-time', nullable: true),
@@ -99,6 +100,7 @@ class SigningController extends Controller
                 'delivery_method' => $contract->delivery_method,
                 'file_path' => $contract->file_path,
                 'pdf_url' => route('contracts.pdf.inline', ['contract' => $contract->id]),
+                'autentique_signing_url' => $contract->autentique_signing_url,
                 'signing_token_expires_at' => $contract->signing_token_expires_at,
                 'signer_data_collected_at' => $contract->signer_data_collected_at,
                 'signed_at' => $contract->signed_at,
@@ -297,9 +299,9 @@ class SigningController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['signed_name', 'delivery_method'],
+                required: ['delivery_method'],
                 properties: [
-                    new OA\Property(property: 'signed_name', type: 'string', example: 'Joao Silva'),
+                    new OA\Property(property: 'signed_name', type: 'string', example: 'Joao Silva', nullable: true),
                     new OA\Property(property: 'delivery_method', type: 'string', enum: ['EMAIL', 'WHATSAPP']),
                 ]
             )
@@ -345,7 +347,7 @@ class SigningController extends Controller
         }
 
         $validated = $request->validate([
-            'signed_name' => ['required', 'string', 'max:255'],
+            'signed_name' => ['nullable', 'string', 'max:255'],
             'delivery_method' => ['required', 'string', Rule::in([Contract::DELIVERY_EMAIL, Contract::DELIVERY_WHATSAPP])],
         ]);
 
@@ -355,7 +357,7 @@ class SigningController extends Controller
 
         $contract->forceFill([
             'status' => $nextStatus,
-            'signer_name' => $validated['signed_name'],
+            'signer_name' => $validated['signed_name'] ?? $contract->signer_name,
             'delivery_method' => $validated['delivery_method'],
         ])->save();
 

@@ -45,6 +45,7 @@ class SendContractToAutentique implements ShouldQueue
 
         $payload = [
             'autentique_document_id' => $result['document_id'],
+            'autentique_signing_url' => $result['signing_url'] ?? null,
         ];
 
         if ($contract->status === Contract::STATUS_DRAFT) {

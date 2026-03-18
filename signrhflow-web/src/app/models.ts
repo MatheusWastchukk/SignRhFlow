@@ -10,6 +10,7 @@ export interface Contract {
   id: string;
   employee_id: string;
   autentique_document_id: string | null;
+  autentique_signing_url?: string | null;
   signing_token?: string | null;
   signing_token_expires_at?: string | null;
   status: 'DRAFT' | 'PENDING' | 'SIGNED' | 'REJECTED';
@@ -27,6 +28,7 @@ export interface SigningContextResponse {
     delivery_method: 'EMAIL' | 'WHATSAPP';
     file_path: string;
     pdf_url: string;
+    autentique_signing_url?: string | null;
     signing_token_expires_at: string | null;
     signer_data_collected_at: string | null;
     signed_at?: string | null;

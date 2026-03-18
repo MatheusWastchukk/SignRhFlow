@@ -89,6 +89,15 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     return `/assinar/${token}`;
   }
 
+  autentiqueSigningUrl(contract: Contract): string | null {
+    const url = contract.autentique_signing_url;
+    if (!url) {
+      return null;
+    }
+
+    return url.startsWith('http') ? url : `https://${url}`;
+  }
+
   formatDateTime(value: string | null | undefined): string {
     if (!value) {
       return '-';

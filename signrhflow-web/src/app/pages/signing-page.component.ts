@@ -5,6 +5,7 @@ import { ApiService } from '../services/api.service';
 import { SigningContextResponse } from '../models';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { PDFDocument } from 'pdf-lib';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -26,18 +27,15 @@ export class SigningPageComponent implements OnInit, OnDestroy {
   savingSignerData = false;
   signingToken = '';
   showSignerModal = true;
-  showSignatureModal = false;
   showDeliveryModal = false;
   selectedDeliveryMethod: 'EMAIL' | 'WHATSAPP' = 'EMAIL';
-  signatureDraft = '';
-  signedName = '';
-  savingSignature = false;
+  openingAutentique = false;
+  hasOpenedAutentique = false;
   finalizing = false;
   finalizeError = '';
   deliveryError = '';
   finalizeSuccess = '';
   pdfViewerUrl: SafeResourceUrl | null = null;
-  pdfPageCount = 1;
   context: SigningContextResponse | null = null;
   private readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
   readonly signerForm = this.formBuilder.group({
@@ -72,7 +70,6 @@ export class SigningPageComponent implements OnInit, OnDestroy {
       next: (context) => {
         this.context = context;
         this.pdfViewerUrl = this.sanitizer.bypassSecurityTrustResourceUrl(context.contract.pdf_url);
-        this.detectPdfPageCount(context.contract.pdf_url);
         this.setSignerModalVisible(true);
         this.signerForm.reset({
           name: '',
@@ -121,7 +118,7 @@ export class SigningPageComponent implements OnInit, OnDestroy {
       next: () => {
         this.setSignerModalVisible(false);
         this.savingSignerData = false;
-        this.signatureDraft = this.signerForm.getRawValue().name ?? '';
+        this.hasOpenedAutentique = false;
       },
       error: (errorResponse) => {
         const errors = errorResponse?.error?.errors;
@@ -141,49 +138,8 @@ export class SigningPageComponent implements OnInit, OnDestroy {
     this.unlockPageScroll();
   }
 
-  openSignatureModal(): void {
-    if (this.showSignerModal) {
-      return;
-    }
-
-    this.showSignatureModal = true;
-    this.finalizeError = '';
-  }
-
-  cancelSignatureModal(): void {
-    this.showSignatureModal = false;
-  }
-
-  async confirmSignatureModal(): Promise<void> {
-    const signature = (this.signatureDraft ?? '').trim();
-    if (!signature) {
-      this.finalizeError = 'Digite a assinatura antes de confirmar.';
-      return;
-    }
-
-    if (!this.signingToken) {
-      this.finalizeError = 'Token de assinatura invalido.';
-      return;
-    }
-
-    this.savingSignature = true;
-    this.finalizeError = '';
-
-    try {
-      await firstValueFrom(this.apiService.signContract(this.signingToken, {
-        signed_name: signature,
-      }));
-      this.signedName = signature;
-      this.showSignatureModal = false;
-    } catch (error: any) {
-      this.finalizeError = error?.error?.message || 'Falha ao confirmar assinatura.';
-    } finally {
-      this.savingSignature = false;
-    }
-  }
-
   get canFinalize(): boolean {
-    return !!this.context && !this.showSignerModal && this.signedName.trim().length > 0;
+    return !!this.context && !this.showSignerModal && this.hasOpenedAutentique;
   }
 
   openFinalizeModal(): void {
@@ -222,7 +178,7 @@ export class SigningPageComponent implements OnInit, OnDestroy {
 
     try {
       const finalizeResponse = await firstValueFrom(this.apiService.finalizeSigning(this.signingToken, {
-        signed_name: this.signedName,
+        signed_name: (this.signerForm.get('name')?.value ?? '').trim() || undefined,
         delivery_method: deliveryMethod,
       }));
 
@@ -239,12 +195,42 @@ export class SigningPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  get pdfViewerWrapperClass(): string {
-    if (this.pdfPageCount > 1) {
-      return 'h-[1120px] overflow-y-auto';
+  async openAutentiqueSigning(): Promise<void> {
+    if (!this.context || this.showSignerModal || this.openingAutentique) {
+      return;
     }
 
-    return 'h-[1120px] overflow-hidden';
+    const signingUrl = this.context.contract.autentique_signing_url;
+    if (!signingUrl) {
+      this.finalizeError = 'Link de assinatura da Autentique ainda nao foi gerado. Aguarde alguns segundos e atualize.';
+      return;
+    }
+
+    this.openingAutentique = true;
+    this.finalizeError = '';
+    window.open(signingUrl, '_blank', 'noopener,noreferrer');
+    this.hasOpenedAutentique = true;
+    this.openingAutentique = false;
+  }
+
+  refreshSigningStatus(): void {
+    if (!this.signingToken) {
+      return;
+    }
+
+    this.loading = true;
+    this.finalizeError = '';
+    this.apiService.getSigningContext(this.signingToken).subscribe({
+      next: (context) => {
+        this.context = context;
+        this.pdfViewerUrl = this.sanitizer.bypassSecurityTrustResourceUrl(context.contract.pdf_url);
+        this.loading = false;
+      },
+      error: (errorResponse) => {
+        this.finalizeError = errorResponse?.error?.message || 'Nao foi possivel atualizar o status da assinatura.';
+        this.loading = false;
+      }
+    });
   }
 
   onPhoneCountryChange(): void {
@@ -316,20 +302,6 @@ export class SigningPageComponent implements OnInit, OnDestroy {
     if (country === 'BR') return digits.length === 10 || digits.length === 11;
     if (country === 'US') return digits.length === 10;
     return digits.length === 9;
-  }
-
-  private async detectPdfPageCount(pdfUrl: string): Promise<void> {
-    try {
-      const response = await fetch(pdfUrl);
-      if (!response.ok) {
-        return;
-      }
-      const bytes = await response.arrayBuffer();
-      const doc = await PDFDocument.load(bytes);
-      this.pdfPageCount = doc.getPageCount();
-    } catch {
-      this.pdfPageCount = 1;
-    }
   }
 
   private setSignerModalVisible(visible: boolean): void {

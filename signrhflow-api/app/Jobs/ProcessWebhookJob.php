@@ -41,11 +41,21 @@ class ProcessWebhookJob implements ShouldQueue
                     ->first();
 
                 if ($contract === null) {
-                    throw new \RuntimeException('Contrato nao encontrado para o document_id informado.');
+                    $webhookLog->forceFill([
+                        'processed' => true,
+                        'error_message' => 'Contrato nao encontrado para o document_id informado.',
+                    ])->save();
+
+                    return;
                 }
 
                 if ($this->canTransition($contract->status, $nextStatus)) {
-                    $contract->forceFill(['status' => $nextStatus])->save();
+                    $payload = ['status' => $nextStatus];
+                    if ($nextStatus === Contract::STATUS_SIGNED && $contract->signed_at === null) {
+                        $payload['signed_at'] = now();
+                    }
+
+                    $contract->forceFill($payload)->save();
                 }
             }
 
@@ -67,15 +77,15 @@ class ProcessWebhookJob implements ShouldQueue
     {
         $event = strtolower((string) $eventType);
 
-        if (str_contains($event, 'signed') || str_contains($event, 'completed')) {
+        if (str_contains($event, 'signed') || str_contains($event, 'completed') || str_contains($event, 'assinad')) {
             return Contract::STATUS_SIGNED;
         }
 
-        if (str_contains($event, 'rejected') || str_contains($event, 'refused') || str_contains($event, 'canceled')) {
+        if (str_contains($event, 'rejected') || str_contains($event, 'refused') || str_contains($event, 'canceled') || str_contains($event, 'rejeit') || str_contains($event, 'recus')) {
             return Contract::STATUS_REJECTED;
         }
 
-        if (str_contains($event, 'created') || str_contains($event, 'sent') || str_contains($event, 'pending')) {
+        if (str_contains($event, 'created') || str_contains($event, 'sent') || str_contains($event, 'pending') || str_contains($event, 'visualiz') || str_contains($event, 'receb')) {
             return Contract::STATUS_PENDING;
         }
 
