@@ -11,8 +11,16 @@ services:
     volumes:
       - ./signrhflow-api:/var/www/html
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
     networks:
       - signrhflow-network
 
@@ -26,9 +34,12 @@ services:
     volumes:
       - ./signrhflow-api:/var/www/html
     depends_on:
-      - api
-      - redis
-      - db
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     networks:
       - signrhflow-network
 
@@ -55,6 +66,12 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - signrhflow-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d signrhflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - signrhflow-network
 
@@ -65,6 +82,12 @@ services:
       - "6379:6379"
     volumes:
       - signrhflow-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
     networks:
       - signrhflow-network
 
