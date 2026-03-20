@@ -46,19 +46,6 @@ export class ApiService {
     return this.http.post<Contract>(`${this.baseUrl}/contracts`, payload);
   }
 
-  updateContract(contractId: string, payload: {
-    status?: 'DRAFT' | 'PENDING' | 'SIGNED' | 'REJECTED';
-    delivery_method?: 'EMAIL' | 'WHATSAPP';
-    employee: {
-      name: string;
-      email: string;
-      phone: string;
-      cpf: string;
-    };
-  }): Observable<Contract> {
-    return this.http.patch<Contract>(`${this.baseUrl}/contracts/${contractId}`, payload);
-  }
-
   deleteContract(contractId: string): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.baseUrl}/contracts/${contractId}`);
   }

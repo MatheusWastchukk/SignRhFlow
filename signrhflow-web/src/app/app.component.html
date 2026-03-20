@@ -1,7 +1,7 @@
 <header *ngIf="!isSigningRoute" class="bg-slate-100/80">
-  <div class="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-5">
+  <div class="mx-auto flex w-full max-w-[min(100%,100rem)] items-center justify-between px-4 sm:px-6 lg:px-8 py-5">
     <a routerLink="/dashboard" class="inline-flex items-center gap-2">
-      <span class="inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-sm font-bold text-white">a</span>
+      <span class="inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-sm font-bold text-white">s</span>
       <span class="text-sm font-semibold text-slate-700">signrhflow</span>
     </a>
 
@@ -25,7 +25,7 @@
     </div>
   </div>
 
-  <div *ngIf="isAuthenticated" class="mx-auto flex w-full max-w-7xl items-center gap-3 px-6 pb-4">
+  <div *ngIf="isAuthenticated" class="mx-auto flex w-full max-w-[min(100%,100rem)] items-center gap-3 px-4 sm:px-6 lg:px-8 pb-4">
     <a
       routerLink="/dashboard"
       routerLinkActive="!bg-blue-600 !text-white"
@@ -44,14 +44,14 @@
 </header>
 
 <main *ngIf="!isSigningRoute; else signingLayout" class="min-h-screen bg-slate-100 pb-10">
-  <div class="mx-auto w-full max-w-7xl px-6 pt-6">
+  <div class="mx-auto w-full max-w-[min(100%,100rem)] min-w-0 px-4 sm:px-6 lg:px-8 pt-6">
     <router-outlet />
   </div>
 </main>
 
 <ng-template #signingLayout>
   <main class="min-h-screen bg-slate-100 pb-10">
-    <div class="mx-auto w-full max-w-7xl px-6 pt-6">
+    <div class="mx-auto w-full max-w-[min(100%,100rem)] min-w-0 px-4 sm:px-6 lg:px-8 pt-6">
       <router-outlet />
     </div>
   </main>
