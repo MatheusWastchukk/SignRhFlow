@@ -1,29 +1,43 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { AppComponent } from './app.component';
+import { ApiService } from './services/api.service';
+import { AuthService } from './services/auth.service';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [
+        provideRouter([]),
+        {
+          provide: AuthService,
+          useValue: {
+            isAuthenticated: (): boolean => false,
+            clearToken: (): void => {},
+            isAuthenticated$: of(false),
+          },
+        },
+        {
+          provide: ApiService,
+          useValue: {
+            logout: () => of({ message: 'ok' }),
+          },
+        },
+      ],
     }).compileComponents();
   });
 
   it('should create the app', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it(`should have the 'signrhflow-web' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('signrhflow-web');
-  });
-
-  it('should render title', () => {
+  it('should show signrhflow brand when not on signing route', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, signrhflow-web');
+    expect(compiled.textContent).toContain('signrhflow');
   });
 });

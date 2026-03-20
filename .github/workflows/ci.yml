@@ -9,6 +9,9 @@ jobs:
   backend:
     name: API (Pint + PHPUnit)
     runs-on: ubuntu-latest
+    env:
+      # Garante artisan/pint mesmo sem .env no runner (phpunit.xml também define para os testes)
+      APP_KEY: base64:2fl+Ktvkd/tudKyGfB5ET5FmUugf4+IFQ7ZvuY2Wq4g=
     defaults:
       run:
         working-directory: signrhflow-api
