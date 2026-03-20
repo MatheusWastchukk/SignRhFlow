@@ -14,11 +14,15 @@ class Contract extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     public const STATUS_DRAFT = 'DRAFT';
+
     public const STATUS_PENDING = 'PENDING';
+
     public const STATUS_SIGNED = 'SIGNED';
+
     public const STATUS_REJECTED = 'REJECTED';
 
     public const DELIVERY_EMAIL = 'EMAIL';
+
     public const DELIVERY_WHATSAPP = 'WHATSAPP';
 
     /**

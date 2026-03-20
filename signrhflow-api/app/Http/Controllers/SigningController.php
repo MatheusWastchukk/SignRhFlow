@@ -179,7 +179,7 @@ class SigningController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email:rfc', 'max:255'],
-            'cpf' => ['required', 'string', new ValidCpf()],
+            'cpf' => ['required', 'string', new ValidCpf],
             'phone' => ['required', 'string', 'regex:/^\+[1-9]\d{7,14}$/'],
             'phone_country' => ['required', 'string', Rule::in(['BR', 'US', 'PT'])],
         ]);
@@ -370,8 +370,8 @@ class SigningController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $signerData
-     * @param array<string, mixed> $employeeData
+     * @param  array<string, mixed>  $signerData
+     * @param  array<string, mixed>  $employeeData
      */
     private function employeeDataMismatches(array $signerData, array $employeeData): array
     {

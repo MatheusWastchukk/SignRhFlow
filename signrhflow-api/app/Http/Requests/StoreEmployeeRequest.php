@@ -37,7 +37,7 @@ class StoreEmployeeRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email:rfc,dns', 'max:255'],
             'phone' => ['required', 'string', 'regex:/^\+[1-9]\d{7,14}$/'],
-            'cpf' => ['required', 'string', new ValidCpf()],
+            'cpf' => ['required', 'string', new ValidCpf],
         ];
     }
 

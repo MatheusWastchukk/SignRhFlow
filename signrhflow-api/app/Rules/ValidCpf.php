@@ -18,6 +18,7 @@ class ValidCpf implements ValidationRule
 
         if (strlen($cpf) !== 11 || preg_match('/(\d)\1{10}/', $cpf)) {
             $fail('O campo :attribute deve conter um CPF valido.');
+
             return;
         }
 
@@ -32,6 +33,7 @@ class ValidCpf implements ValidationRule
 
             if ((int) $cpf[$t] !== $digit) {
                 $fail('O campo :attribute deve conter um CPF valido.');
+
                 return;
             }
         }

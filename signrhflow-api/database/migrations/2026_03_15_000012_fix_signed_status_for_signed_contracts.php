@@ -18,4 +18,3 @@ return new class extends Migration
         // Sem rollback seguro para esta normalizacao de dados.
     }
 };
-

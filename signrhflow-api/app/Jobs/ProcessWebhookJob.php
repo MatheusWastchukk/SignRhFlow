@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Contract;
 use App\Models\WebhookLog;
+use App\Support\Metrics;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Throwable;
@@ -45,6 +46,7 @@ class ProcessWebhookJob implements ShouldQueue
                         'processed' => true,
                         'error_message' => 'Contrato nao encontrado para o document_id informado.',
                     ])->save();
+                    Metrics::increment('webhook_processed_total');
 
                     return;
                 }
@@ -63,11 +65,13 @@ class ProcessWebhookJob implements ShouldQueue
                 'processed' => true,
                 'error_message' => null,
             ])->save();
+            Metrics::increment('webhook_processed_total');
         } catch (Throwable $exception) {
             $webhookLog->forceFill([
                 'processed' => true,
                 'error_message' => $exception->getMessage(),
             ])->save();
+            Metrics::increment('webhook_processed_total');
 
             throw $exception;
         }

@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Contract;
 use App\Services\AutentiqueService;
+use App\Support\Metrics;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\RateLimiter;
@@ -53,6 +54,8 @@ class SendContractToAutentique implements ShouldQueue
         }
 
         $contract->forceFill($payload)->save();
+
+        Metrics::increment('contracts_sent_autentique_total');
     }
 
     public function failed(?Throwable $exception): void

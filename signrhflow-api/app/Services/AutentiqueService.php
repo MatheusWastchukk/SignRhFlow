@@ -100,8 +100,8 @@ GRAPHQL,
     }
 
     /**
-     * @param array<string, mixed> $operations
-     * @param array<string, mixed> $map
+     * @param  array<string, mixed>  $operations
+     * @param  array<string, mixed>  $map
      */
     private function sendCreateDocumentRequest(string $token, string $url, array $operations, array $map, string $absolutePath): Response
     {
@@ -154,7 +154,7 @@ GRAPHQL,
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     private function hasUnavailableVerificationCredits(array $payload): bool
     {
@@ -175,7 +175,7 @@ GRAPHQL,
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     private function payloadSnippet(array $payload): string
     {

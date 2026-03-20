@@ -162,7 +162,7 @@ class ContractController extends Controller
             'employee.cpf' => [
                 'required',
                 'string',
-                new ValidCpf(),
+                new ValidCpf,
                 Rule::unique('employees', 'cpf')->ignore($employee->id),
             ],
         ]);

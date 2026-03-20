@@ -1,5 +1,7 @@
 # SignRhFlow API
 
+Visão de produto, diagramas e decisões: veja o **[README na raiz do monorepo](../README.md)**.
+
 API Laravel para fluxo de admissao com:
 
 - cadastro de colaboradores;
@@ -44,6 +46,12 @@ QUEUE_CONNECTION=redis
 AUTENTIQUE_API_TOKEN=
 AUTENTIQUE_GRAPHQL_URL=https://api.autentique.com.br/v2/graphql
 AUTENTIQUE_WEBHOOK_SECRET=
+
+API_RATE_LIMIT_PER_MINUTE=120
+WEBHOOK_RATE_LIMIT_PER_MINUTE=300
+METRICS_TOKEN=
+
+# Opcional: LOG_STACK=single,json
 ```
 
 ## Documentação de API (Swagger)
@@ -65,12 +73,18 @@ docker compose exec api php artisan queue:work --queue=contracts,webhooks
 
 ```bash
 docker compose exec api php artisan test
+docker compose exec api composer run lint
 ```
+
+- `GET /api/health` — readiness (DB + Redis). Ver `../Docs/Healthchecks.md`.
+- `GET /api/metrics` — contadores (somente com `METRICS_TOKEN`); `Authorization: Bearer ...`
 
 ## Decisões técnicas
 
 - PDF é persistido em `storage/app/contracts`.
 - Envio para Autentique é sempre assíncrono.
-- Limite de 60 req/min é aplicado com `RateLimiter` e `release(delay)`.
+- Limite interno no job de envio à Autentique (`RateLimiter` + `release`).
+- Rate limit HTTP: `throttle:api` (configurável) e `throttle:webhooks` na rota do webhook.
 - Webhook usa hash do payload para idempotência (`event_hash` único).
+- Com `AUTENTIQUE_WEBHOOK_SECRET`, validação HMAC do header `X-Autentique-Signature`.
 - Estados terminais (`SIGNED`, `REJECTED`) não regredem em eventos fora de ordem.

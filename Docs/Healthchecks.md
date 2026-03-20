@@ -49,6 +49,16 @@
 
 ## Testes automatizados
 
-```bash
-cd signrhflow-api && php artisan test --filter=HealthCheckTest
+Com Docker (na raiz do monorepo):
+
+```powershell
+docker compose exec api php artisan test --filter=HealthCheckTest
 ```
+
+Ou avulso, sem manter o `serve` no ar:
+
+```powershell
+docker compose run --rm --no-deps api bash -lc "composer install --no-interaction && php artisan test --filter=HealthCheckTest"
+```
+
+Ver também [`ComandosDocker.md`](ComandosDocker.md).

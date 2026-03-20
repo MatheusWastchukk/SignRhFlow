@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  backend:
+    name: API (Pint + PHPUnit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: signrhflow-api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, pdo_sqlite, redis
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Lint (Laravel Pint)
+        run: composer run lint
+
+      - name: Tests
+        run: php artisan test
+
+  frontend:
+    name: Web (build + unit tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: signrhflow-web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: signrhflow-web/package-lock.json
+
+      - uses: browser-actions/setup-chrome@v1
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit tests (Karma + ChromeHeadless)
+        env:
+          CHROME_BIN: chrome
+        run: npx ng test --no-watch --no-progress --browsers=ChromeHeadless
