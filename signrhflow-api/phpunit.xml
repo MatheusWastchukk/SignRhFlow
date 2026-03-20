@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/bootstrap.php"
          colors="true"
 >
     <testsuites>
@@ -18,8 +18,7 @@
         </include>
     </source>
     <php>
-        <!-- Chave fixa só para testes/CI (evita MissingAppKeyException sem .env) -->
-        <env name="APP_KEY" value="base64:2fl+Ktvkd/tudKyGfB5ET5FmUugf4+IFQ7ZvuY2Wq4g="/>
+        <!-- APP_KEY: ver tests/bootstrap.php (gerada se ausente) ou variável de ambiente / .env -->
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

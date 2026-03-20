@@ -9,9 +9,6 @@ jobs:
   backend:
     name: API (Pint + PHPUnit)
     runs-on: ubuntu-latest
-    env:
-      # Garante artisan/pint mesmo sem .env no runner (phpunit.xml também define para os testes)
-      APP_KEY: base64:2fl+Ktvkd/tudKyGfB5ET5FmUugf4+IFQ7ZvuY2Wq4g=
     defaults:
       run:
         working-directory: signrhflow-api
@@ -24,6 +21,10 @@ jobs:
           php-version: "8.4"
           extensions: mbstring, pdo_sqlite, redis
           coverage: none
+
+      # Não commitar APP_KEY — gera por execução (evita GitGuardian / vazamento no histórico)
+      - name: APP_KEY para Composer/Artisan no runner
+        run: echo "APP_KEY=$(php -r 'echo "base64:".base64_encode(random_bytes(32));')" >> "$GITHUB_ENV"
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
@@ -58,7 +59,8 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Unit tests (Karma + ChromeHeadless)
+      - name: Unit tests (Karma + ChromeHeadlessNoSandbox)
         env:
           CHROME_BIN: chrome
-        run: npx ng test --no-watch --no-progress --browsers=ChromeHeadless
+        # karma.conf.js define ChromeHeadlessNoSandbox (--no-sandbox) para runners Ubuntu/Actions
+        run: npx ng test --no-watch --no-progress

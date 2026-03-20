@@ -57,10 +57,12 @@ O `ng test` precisa do **Chrome/Chromium**. A imagem `node:20` não traz navegad
 2. **Um comando avulso com Chromium** (instala no container como root):
 
 ```powershell
-docker compose run --rm --no-deps -u root web bash -lc "apt-get update && apt-get install -y chromium && cd /app && npm ci && CHROME_BIN=/usr/bin/chromium npx ng test --no-watch --no-progress --browsers=ChromeHeadless"
+docker compose run --rm --no-deps -u root web bash -lc "apt-get update && apt-get install -y chromium && cd /app && npm ci && CHROME_BIN=/usr/bin/chromium npx ng test --no-watch --no-progress"
 ```
 
-Se falhar por sandbox, use o CI ou rode os testes em uma máquina com Node instalado.
+O `karma.conf.js` já usa **ChromeHeadlessNoSandbox** com `--no-sandbox`, igual ao CI.
+
+Se ainda falhar, use o CI ou rode os testes em uma máquina com Node instalado.
 
 ---
 
