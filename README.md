@@ -1,7 +1,6 @@
 # SignRhFlow
 
-Monorepo que integra **RH** (colaboradores, contratos, PDF) com assinatura eletrônica na **[Autentique](https://docs.autentique.com.br/api/2)** (GraphQL + webhooks). Backend em **Laravel**, frontend em **Angular**, filas em **Redis**.
-
+SignRhFlow é um projeto pessoal de arquitetura Full Stack desenvolvido para aprofundar o domínio no ecossistema **PHP** (Laravel 12) e **Angular**. O foco central é a automação de fluxos de RH, integrando a geração programática de documentos PDF com a API da **[Autentique](https://docs.autentique.com.br/api/2)** via **GraphQL**. O projeto aplica conceitos avançados como processamento assíncrono com **Redis**, mensageria idempotente via Webhooks e ambiente containerizado com **Docker**.
 ---
 
 ## Índice
@@ -13,7 +12,6 @@ Monorepo que integra **RH** (colaboradores, contratos, PDF) com assinatura eletr
 - [Documentação](#documentação)
 - [Qualidade e CI](#qualidade-e-ci)
 - [Segurança e privacidade](#segurança-e-privacidade)
-- [Licença](#licença)
 
 ---
 
@@ -69,8 +67,7 @@ docker compose exec api php artisan queue:work --queue=contracts,webhooks
 - Readiness: `GET /api/health`
 - Front (fora do Compose ou conforme seu `docker-compose`): `http://localhost:4200`
 
-**Windows (scripts):** `.\scripts\docker-api-test.ps1`, `.\scripts\docker-web-build.ps1`  
-**Comandos Docker detalhados:** [`Docs/ComandosDocker.md`](Docs/ComandosDocker.md)
+**Windows (scripts):** `.\scripts\docker-api-test.ps1`, `.\scripts\docker-web-build.ps1`
 
 Variáveis importantes (`.env` da API): `AUTENTIQUE_API_TOKEN`, `AUTENTIQUE_GRAPHQL_URL`, `AUTENTIQUE_WEBHOOK_SECRET` (opcional), `QUEUE_CONNECTION=redis`, `METRICS_TOKEN` (opcional).
 
@@ -84,7 +81,6 @@ Variáveis importantes (`.env` da API): `AUTENTIQUE_API_TOKEN`, `AUTENTIQUE_GRAP
 4. Signatário usa o **link** (`/assinar/:token` no front) e segue o fluxo até finalizar no app; a assinatura legal ocorre na Autentique.
 5. **Webhook** `POST /api/webhooks/autentique` recebe eventos; processamento em background atualiza status (**SIGNED** / **REJECTED**) sem processar o mesmo payload duas vezes (hash).
 
-Demo gravada: roteiro em [`Docs/DemoScript.md`](Docs/DemoScript.md).
 
 ---
 
@@ -103,11 +99,7 @@ Demo gravada: roteiro em [`Docs/DemoScript.md`](Docs/DemoScript.md).
 
 | Arquivo | Descrição |
 |---------|-----------|
-| [`Docs/BACKEND_GUIDE_PT.md`](Docs/BACKEND_GUIDE_PT.md) | **Tour completo do backend PHP** (iniciantes) |
 | [`signrhflow-api/README.md`](signrhflow-api/README.md) | Comandos rápidos da API |
-| [`Docs/ComandosDocker.md`](Docs/ComandosDocker.md) | Docker |
-| [`Docs/Healthchecks.md`](Docs/Healthchecks.md) | `/up` vs `/api/health` |
-| [`Docs/LGPD.md`](Docs/LGPD.md) | Notas de privacidade |
 
 Integração externa: [Autentique API v2](https://docs.autentique.com.br/api/2).
 
@@ -127,10 +119,3 @@ Integração externa: [Autentique API v2](https://docs.autentique.com.br/api/2).
 - Tokens: rotacionar `AUTENTIQUE_API_TOKEN` e credenciais do app em produção.
 - **Melhoria recomendada para produção:** exigir `RequireApiTokenAuth` nas rotas de RH (`employees`, `contracts`) e ajustar testes — hoje o front já envia Bearer após login, mas a API aceita essas rotas sem token (adequado para demo, frágil em produção).
 
-Mais detalhes: [`Docs/LGPD.md`](Docs/LGPD.md).
-
----
-
-## Licença
-
-MIT (ajuste se necessário).
