@@ -50,7 +50,7 @@ jobs:
           cache: npm
           cache-dependency-path: signrhflow-web/package-lock.json
 
-      - uses: browser-actions/setup-chrome@v1
+      - uses: browser-actions/setup-chrome@v2
 
       - name: Install npm dependencies
         run: npm ci
