@@ -1,40 +1,35 @@
-# SignrhflowWeb
+# SignRhFlow Web (Angular 17)
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.17.
+SPA do dashboard e do fluxo de assinatura. Visão geral do monorepo: [**README na raiz**](../README.md).
 
-## Só Docker (sem Node no Windows)
+## Desenvolvimento
 
-Na **raiz do monorepo** (`SignRhFlow`):
-
-```powershell
-# Build de produção dentro do container
-docker compose run --rm --no-deps web bash -lc "npm ci && npm run build"
+```bash
+cd signrhflow-web
+npm ci
+ng serve
 ```
 
-Ou use o script: `.\scripts\docker-web-build.ps1`
-
-Guia completo: [`../Docs/ComandosDocker.md`](../Docs/ComandosDocker.md).
-
-## Development server
-
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
-
-## Code scaffolding
-
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Abra `http://localhost:4200/`. A API padrão aponta para `http://localhost:8000/api` (veja `src/app/services/api.service.ts`).
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+```bash
+npm run build
+```
 
-## Running unit tests
+## Testes unitários
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```bash
+npm test
+```
 
-## Running end-to-end tests
+## Docker (sem Node local)
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+Na raiz do repositório:
 
-## Further help
+```powershell
+docker compose run --rm --no-deps web bash -lc "npm ci && npm run build"
+```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+Ou: `.\scripts\docker-web-build.ps1` — detalhes em [`../Docs/ComandosDocker.md`](../Docs/ComandosDocker.md).

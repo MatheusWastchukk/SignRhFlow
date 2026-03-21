@@ -4,11 +4,7 @@ namespace App\Services;
 
 use Illuminate\Http\Request;
 
-/**
- * Validação conforme documentação Autentique: HMAC-SHA256 do corpo bruto no header X-Autentique-Signature.
- *
- * @see https://docs.autentique.com.br/api/integration-basics/webhooks
- */
+/** @see https://docs.autentique.com.br/api/integration-basics/webhooks */
 class AutentiqueWebhookVerifier
 {
     public const SIGNATURE_HEADER = 'X-Autentique-Signature';

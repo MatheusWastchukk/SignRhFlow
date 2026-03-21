@@ -37,10 +37,6 @@ class HealthController extends Controller
             new OA\Response(response: 503, description: 'Dependencia indisponivel'),
         ]
     )]
-    /**
-     * Readiness: verifica dependências críticas (PostgreSQL + Redis).
-     * Use em orquestradores/Docker; liveness simples continua em GET /up.
-     */
     public function __invoke(): JsonResponse
     {
         $checks = [

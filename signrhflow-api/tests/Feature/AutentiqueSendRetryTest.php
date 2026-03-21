@@ -60,7 +60,6 @@ class AutentiqueSendRetryTest extends TestCase
             $job->handle(app(AutentiqueService::class));
             $this->fail('Primeira chamada deveria falhar com HTTP 500 da Autentique.');
         } catch (RuntimeException) {
-            // esperado
         }
 
         $job->handle(app(AutentiqueService::class));

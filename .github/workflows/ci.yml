@@ -22,7 +22,6 @@ jobs:
           extensions: mbstring, pdo_sqlite, redis
           coverage: none
 
-      # Não commitar APP_KEY — gera por execução (evita GitGuardian / vazamento no histórico)
       - name: APP_KEY para Composer/Artisan no runner
         run: echo "APP_KEY=$(php -r 'echo "base64:".base64_encode(random_bytes(32));')" >> "$GITHUB_ENV"
 
@@ -62,5 +61,4 @@ jobs:
       - name: Unit tests (Karma + ChromeHeadlessNoSandbox)
         env:
           CHROME_BIN: chrome
-        # karma.conf.js define ChromeHeadlessNoSandbox (--no-sandbox) para runners Ubuntu/Actions
         run: npx ng test --no-watch --no-progress

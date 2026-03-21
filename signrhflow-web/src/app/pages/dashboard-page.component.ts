@@ -20,14 +20,6 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
   feedbackSuccess = '';
   viewContract: Contract | null = null;
 
-  /** Alias se o HTML ainda usar `editSuccess` / `editError` (mesmo valor que feedback*). */
-  get editSuccess(): string {
-    return this.feedbackSuccess;
-  }
-
-  get editError(): string {
-    return this.feedbackError;
-  }
   private readonly destroy$ = new Subject<void>();
 
   constructor(private readonly apiService: ApiService) {}

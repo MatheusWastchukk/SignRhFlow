@@ -8,9 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ForceJsonResponse
 {
-    /**
-     * Force API routes to negotiate JSON responses.
-     */
     public function handle(Request $request, Closure $next): Response
     {
         if ($request->is('api/*')) {

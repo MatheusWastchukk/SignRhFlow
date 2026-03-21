@@ -66,8 +66,6 @@ class SendContractToAutentique implements ShouldQueue
             return;
         }
 
-        // Falha tecnica de fila/API nao significa rejeicao do signatario.
-        // Mantemos o status funcional do contrato sem sobrescrever estados terminais.
         if (in_array($contract->status, [Contract::STATUS_SIGNED, Contract::STATUS_REJECTED], true)) {
             return;
         }

@@ -14,6 +14,5 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Sem rollback seguro para normalizacao de status.
     }
 };
