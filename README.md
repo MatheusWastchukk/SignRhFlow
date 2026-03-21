@@ -1,6 +1,7 @@
 # SignRhFlow
 
 SignRhFlow é um projeto pessoal de arquitetura Full Stack desenvolvido para aprofundar o domínio no ecossistema **PHP** (Laravel 12) e **Angular**. O foco central é a automação de fluxos de RH, integrando a geração programática de documentos PDF com a API da **[Autentique](https://docs.autentique.com.br/api/2)** via **GraphQL**. O projeto aplica conceitos avançados como processamento assíncrono com **Redis**, mensageria idempotente via Webhooks e ambiente containerizado com **Docker**.
+
 ---
 
 ## Índice
