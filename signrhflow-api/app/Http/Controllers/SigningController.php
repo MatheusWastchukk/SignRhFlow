@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Contract;
 use App\Rules\ValidCpf;
+use App\Services\AutentiqueService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -74,7 +75,7 @@ class SigningController extends Controller
             new OA\Response(response: 410, description: 'Link de assinatura expirado'),
         ]
     )]
-    public function context(string $token): JsonResponse
+    public function context(string $token, AutentiqueService $autentiqueService): JsonResponse
     {
         $contract = Contract::query()
             ->with('employee')
@@ -93,6 +94,30 @@ class SigningController extends Controller
             ], 410);
         }
 
+        $signingUrl = $contract->autentique_signing_url;
+
+        if (
+            $signingUrl === null
+            && is_string($contract->autentique_document_id)
+            && $contract->autentique_document_id !== ''
+        ) {
+            $resolvedSigningUrl = $autentiqueService->resolveSigningUrlByDocumentId(
+                $contract->autentique_document_id,
+                $contract->employee?->email
+            );
+            if ($resolvedSigningUrl !== null) {
+                $contract->forceFill([
+                    'autentique_signing_url' => $resolvedSigningUrl,
+                ])->save();
+                $signingUrl = $resolvedSigningUrl;
+            }
+        }
+
+        if (is_string($contract->autentique_document_id) && $contract->autentique_document_id !== '') {
+            $autentiqueService->applyDocumentProgressToContract($contract);
+            $contract->refresh();
+        }
+
         return response()->json([
             'contract' => [
                 'id' => $contract->id,
@@ -100,7 +125,7 @@ class SigningController extends Controller
                 'delivery_method' => $contract->delivery_method,
                 'file_path' => $contract->file_path,
                 'pdf_url' => route('contracts.pdf.inline', ['contract' => $contract->id]),
-                'autentique_signing_url' => $contract->autentique_signing_url,
+                'autentique_signing_url' => $signingUrl,
                 'signing_token_expires_at' => $contract->signing_token_expires_at,
                 'signer_data_collected_at' => $contract->signer_data_collected_at,
                 'signed_at' => $contract->signed_at,
@@ -328,7 +353,7 @@ class SigningController extends Controller
             ),
         ]
     )]
-    public function finalize(Request $request, string $token): JsonResponse
+    public function finalize(Request $request, string $token, AutentiqueService $autentiqueService): JsonResponse
     {
         $contract = Contract::query()
             ->where('signing_token', $token)
@@ -361,8 +386,19 @@ class SigningController extends Controller
             'delivery_method' => $validated['delivery_method'],
         ])->save();
 
+        if (is_string($contract->autentique_document_id) && $contract->autentique_document_id !== '') {
+            $autentiqueService->applyDocumentProgressToContract($contract);
+            $contract->refresh();
+        }
+
+        $message = $contract->status === Contract::STATUS_SIGNED
+            ? 'Assinatura confirmada na Autentique. Contrato atualizado.'
+            : ($contract->status === Contract::STATUS_REJECTED
+                ? 'Documento marcado como recusado na Autentique.'
+                : 'Solicitacao registrada. O status sera atualizado quando a Autentique concluir a assinatura ou via webhook.');
+
         return response()->json([
-            'message' => 'Solicitacao concluida. Aguarde a confirmacao de assinatura pela Autentique.',
+            'message' => $message,
             'signed_at' => $contract->signed_at,
             'delivery_method' => $contract->delivery_method,
             'status' => $contract->status,

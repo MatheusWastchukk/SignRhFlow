@@ -65,7 +65,7 @@ class WebhookController extends Controller
 
         $payload = $request->all();
         $eventType = $this->resolveEventType($payload);
-        $documentId = $this->resolveDocumentId($payload);
+        $documentId = $this->normalizeAutentiqueDocumentIdForStorage($this->resolveDocumentId($payload));
         $eventHash = hash('sha256', json_encode($payload));
 
         $webhookLog = WebhookLog::query()->firstOrCreate(
@@ -106,9 +106,19 @@ class WebhookController extends Controller
      */
     private function resolveEventType(array $payload): string
     {
-        $eventType = (string) data_get($payload, 'event_type', data_get($payload, 'event', ''));
+        $nested = data_get($payload, 'event.type');
+        if (is_string($nested) && $nested !== '') {
+            return $nested;
+        }
+
+        $eventType = (string) data_get($payload, 'event_type', '');
         if ($eventType !== '') {
             return $eventType;
+        }
+
+        $eventField = data_get($payload, 'event');
+        if (is_string($eventField) && $eventField !== '') {
+            return $eventField;
         }
 
         if (data_get($payload, 'partes.0.assinado.created') !== null) {
@@ -129,8 +139,35 @@ class WebhookController extends Controller
      */
     private function resolveDocumentId(array $payload): string
     {
+        $fromEventObject = data_get($payload, 'event.data.object.id');
+        if (is_string($fromEventObject) && $fromEventObject !== '') {
+            return $fromEventObject;
+        }
+
+        $eventObject = data_get($payload, 'event.data.object');
+        if (is_array($eventObject) && ($eventObject['object'] ?? null) === 'signature') {
+            $doc = $eventObject['document'] ?? null;
+            if (is_string($doc) && $doc !== '') {
+                return $doc;
+            }
+        }
+
+        $fromSignaturePayload = data_get($payload, 'event.data.document');
+        if (is_string($fromSignaturePayload) && $fromSignaturePayload !== '') {
+            return $fromSignaturePayload;
+        }
+
         $documentId = (string) data_get($payload, 'data.id', data_get($payload, 'document.id', data_get($payload, 'documento.uuid', '')));
 
         return $documentId !== '' ? $documentId : 'unknown';
+    }
+
+    private function normalizeAutentiqueDocumentIdForStorage(string $documentId): string
+    {
+        if ($documentId === '' || $documentId === 'unknown') {
+            return $documentId;
+        }
+
+        return mb_strtolower(trim($documentId));
     }
 }

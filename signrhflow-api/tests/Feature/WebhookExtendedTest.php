@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use App\Jobs\ProcessWebhookJob;
+use App\Models\Contract;
+use App\Models\Employee;
+use App\Models\WebhookLog;
 use App\Services\AutentiqueWebhookVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -98,5 +101,95 @@ class WebhookExtendedTest extends TestCase
     public function test_signature_header_constant_matches_autentique_docs(): void
     {
         $this->assertSame('X-Autentique-Signature', AutentiqueWebhookVerifier::SIGNATURE_HEADER);
+    }
+
+    public function test_autentique_v2_signature_accepted_maps_document_and_dispatches_job(): void
+    {
+        Queue::fake();
+
+        $payload = [
+            'id' => 'wh_cfg_1',
+            'object' => 'webhook',
+            'event' => [
+                'id' => 'evt_1',
+                'type' => 'signature.accepted',
+                'data' => [
+                    'object' => 'signature',
+                    'document' => 'f48a8b465d02dd87559e08f06c41e3b6d548c4d7ad835eb0f',
+                    'signed' => '2025-01-31T12:22:30.000000Z',
+                ],
+            ],
+        ];
+
+        $response = $this->postJson('/api/webhooks/autentique', $payload);
+
+        $response->assertOk()
+            ->assertJson(['received' => true, 'duplicate' => false]);
+
+        $this->assertDatabaseHas('webhook_logs', [
+            'autentique_document_id' => 'f48a8b465d02dd87559e08f06c41e3b6d548c4d7ad835eb0f',
+            'event_type' => 'signature.accepted',
+        ]);
+
+        Queue::assertPushed(ProcessWebhookJob::class, 1);
+    }
+
+    public function test_autentique_v2_document_object_nested_id_maps_document(): void
+    {
+        Queue::fake();
+
+        $payload = [
+            'event' => [
+                'type' => 'document.finished',
+                'data' => [
+                    'object' => [
+                        'id' => '89c7d2ab31f9f5a13b3d20ecf53319af387e54d240ae7be993',
+                        'object' => 'document',
+                    ],
+                ],
+            ],
+        ];
+
+        $this->postJson('/api/webhooks/autentique', $payload)->assertOk();
+
+        $this->assertDatabaseHas('webhook_logs', [
+            'autentique_document_id' => '89c7d2ab31f9f5a13b3d20ecf53319af387e54d240ae7be993',
+            'event_type' => 'document.finished',
+        ]);
+    }
+
+    public function test_process_webhook_job_marks_contract_signed_for_signature_accepted(): void
+    {
+        $employee = Employee::query()->create([
+            'name' => 'Webhook Signer',
+            'email' => 'webhook.signer@example.com',
+            'phone' => '+5511987654321',
+            'cpf' => '52998224725',
+        ]);
+
+        $documentId = 'f48a8b465d02dd87559e08f06c41e3b6d548c4d7ad835eb0f';
+
+        $contract = Contract::query()->create([
+            'employee_id' => $employee->id,
+            'autentique_document_id' => $documentId,
+            'status' => Contract::STATUS_PENDING,
+            'delivery_method' => Contract::DELIVERY_EMAIL,
+            'file_path' => 'contracts/webhook-test.pdf',
+        ]);
+
+        $log = WebhookLog::query()->create([
+            'event_hash' => hash('sha256', uniqid('sig_acc_', true)),
+            'autentique_document_id' => $documentId,
+            'event_type' => 'signature.accepted',
+            'payload' => [],
+            'processed' => false,
+        ]);
+
+        (new ProcessWebhookJob($log->id))->handle();
+
+        $this->assertDatabaseHas('contracts', [
+            'id' => $contract->id,
+            'status' => Contract::STATUS_SIGNED,
+        ]);
     }
 }

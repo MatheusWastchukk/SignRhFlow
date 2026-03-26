@@ -37,8 +37,10 @@ class ProcessWebhookJob implements ShouldQueue
             $nextStatus = $this->mapEventToStatus($webhookLog->event_type);
 
             if ($nextStatus !== null) {
+                $documentKey = mb_strtolower(trim((string) $webhookLog->autentique_document_id));
+
                 $contract = Contract::query()
-                    ->where('autentique_document_id', $webhookLog->autentique_document_id)
+                    ->whereRaw('LOWER(autentique_document_id) = ?', [$documentKey])
                     ->first();
 
                 if ($contract === null) {
@@ -81,15 +83,35 @@ class ProcessWebhookJob implements ShouldQueue
     {
         $event = strtolower((string) $eventType);
 
-        if (str_contains($event, 'signed') || str_contains($event, 'completed') || str_contains($event, 'assinad')) {
+        if (
+            str_contains($event, 'signature.accepted')
+            || str_contains($event, 'document.finished')
+            || str_contains($event, 'document.completed')
+            || str_contains($event, 'signed')
+            || str_contains($event, 'completed')
+            || str_contains($event, 'assinad')
+        ) {
             return Contract::STATUS_SIGNED;
         }
 
-        if (str_contains($event, 'rejected') || str_contains($event, 'refused') || str_contains($event, 'canceled') || str_contains($event, 'rejeit') || str_contains($event, 'recus')) {
+        if (
+            str_contains($event, 'signature.rejected')
+            || str_contains($event, 'rejected')
+            || str_contains($event, 'refused')
+            || str_contains($event, 'canceled')
+            || str_contains($event, 'rejeit')
+            || str_contains($event, 'recus')
+        ) {
             return Contract::STATUS_REJECTED;
         }
 
-        if (str_contains($event, 'created') || str_contains($event, 'sent') || str_contains($event, 'pending') || str_contains($event, 'visualiz') || str_contains($event, 'receb')) {
+        if (
+            str_contains($event, 'created')
+            || str_contains($event, 'sent')
+            || str_contains($event, 'pending')
+            || str_contains($event, 'visualiz')
+            || str_contains($event, 'receb')
+        ) {
             return Contract::STATUS_PENDING;
         }
 

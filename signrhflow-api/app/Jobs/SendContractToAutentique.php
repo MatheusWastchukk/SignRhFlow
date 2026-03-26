@@ -7,6 +7,7 @@ use App\Services\AutentiqueService;
 use App\Support\Metrics;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Throwable;
 
@@ -40,7 +41,15 @@ class SendContractToAutentique implements ShouldQueue
 
         $contract = Contract::query()
             ->with('employee')
-            ->findOrFail($this->contractId);
+            ->find($this->contractId);
+
+        if ($contract === null) {
+            Log::info('SendContractToAutentique ignorado: contrato nao existe mais.', [
+                'contract_id' => $this->contractId,
+            ]);
+
+            return;
+        }
 
         $result = $autentiqueService->createDocument($contract);
 
@@ -54,6 +63,12 @@ class SendContractToAutentique implements ShouldQueue
         }
 
         $contract->forceFill($payload)->save();
+
+        Log::info('Contrato enviado para Autentique.', [
+            'contract_id' => $contract->id,
+            'autentique_document_id' => $payload['autentique_document_id'],
+            'autentique_signing_url' => $payload['autentique_signing_url'],
+        ]);
 
         Metrics::increment('contracts_sent_autentique_total');
     }
