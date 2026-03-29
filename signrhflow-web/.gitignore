@@ -28,6 +28,9 @@ yarn-error.log
 !.vscode/extensions.json
 .history/*
 
+# Ambiente local (URLs da API)
+.env
+
 # Miscellaneous
 /.angular/cache
 .sass-cache/

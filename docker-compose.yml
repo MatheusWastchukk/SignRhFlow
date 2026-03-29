@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: signrhflow_api
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8001:8000"
     volumes:
       - ./signrhflow-api:/var/www/html
     depends_on:
@@ -48,7 +48,7 @@ services:
     volumes:
       - ./signrhflow-web:/app
     ports:
-      - "4200:4200"
+      - "127.0.0.1:4200:4200"
     command: bash -c "npm install && npx ng serve --host 0.0.0.0 --poll 2000"
     networks:
       - signrhflow-network
@@ -57,7 +57,7 @@ services:
     image: postgres:16-alpine
     container_name: signrhflow_db
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: signrhflow
       POSTGRES_USER: root
@@ -76,8 +76,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: signrhflow_redis
-    ports:
-      - "6379:6379"
     volumes:
       - signrhflow-redis-data:/data
     healthcheck:

@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, interval, startWith, switchMap, takeUntil } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { ApiService } from '../services/api.service';
 import { Contract } from '../models';
 
@@ -51,7 +52,7 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
   }
 
   pdfUrl(contractId: string): string {
-    return `http://localhost:8000/api/contracts/${contractId}/pdf`;
+    return `${environment.apiBaseUrl}/contracts/${contractId}/pdf`;
   }
 
   signingUrl(token: string | null | undefined): string | null {
