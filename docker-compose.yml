@@ -41,21 +41,18 @@ services:
     networks:
       - signrhflow-network
 
+  # Front: `ng build` + Nginx (estático). Rebuild após mudar código: docker compose build web --no-cache
+  # WEB_BUILD_NG_API_URL no .env da raiz (opcional) define a API embutida no JS.
   web:
-    image: node:20
+    build:
+      context: ./signrhflow-web
+      dockerfile: Dockerfile
+      args:
+        NG_API_URL: ${WEB_BUILD_NG_API_URL:-https://matheuswastchuk.tech/SignRhFlow/api}
+    image: signrhflow_web:latest
     container_name: signrhflow_web
-    working_dir: /app
-    volumes:
-      - ./signrhflow-web:/app
     ports:
-      - "127.0.0.1:4200:4200"
-    command: >
-      bash -c "npm install &&
-      npx ng serve
-      --host 0.0.0.0
-      --port 4200
-      --poll 2000
-      --disable-host-check"
+      - "127.0.0.1:4200:80"
     networks:
       - signrhflow-network
 
