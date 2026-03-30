@@ -34,7 +34,11 @@ class ProcessWebhookJob implements ShouldQueue
         }
 
         try {
+            $payload = is_array($webhookLog->payload) ? $webhookLog->payload : [];
             $nextStatus = $this->mapEventToStatus($webhookLog->event_type);
+            if ($nextStatus === null) {
+                $nextStatus = $this->inferStatusFromAutentiqueDocumentPayload($payload);
+            }
 
             if ($nextStatus !== null) {
                 $documentKey = mb_strtolower(trim((string) $webhookLog->autentique_document_id));
@@ -113,6 +117,60 @@ class ProcessWebhookJob implements ShouldQueue
             || str_contains($event, 'receb')
         ) {
             return Contract::STATUS_PENDING;
+        }
+
+        return null;
+    }
+
+    /**
+     * document.updated costuma trazer signed_count / signatures_count no payload (v2 Autentique).
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function inferStatusFromAutentiqueDocumentPayload(array $payload): ?string
+    {
+        $doc = $this->extractAutentiqueDocumentBlobFromPayload($payload);
+        if ($doc === null) {
+            return null;
+        }
+
+        $sigCount = (int) ($doc['signatures_count'] ?? 0);
+        $signed = (int) ($doc['signed_count'] ?? 0);
+        $rejected = (int) ($doc['rejected_count'] ?? 0);
+
+        if ($sigCount <= 0) {
+            return null;
+        }
+
+        if ($signed >= $sigCount) {
+            return Contract::STATUS_SIGNED;
+        }
+
+        if ($rejected > 0 && ($signed + $rejected) >= $sigCount) {
+            return Contract::STATUS_REJECTED;
+        }
+
+        return Contract::STATUS_PENDING;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>|null
+     */
+    private function extractAutentiqueDocumentBlobFromPayload(array $payload): ?array
+    {
+        $eventData = data_get($payload, 'event.data');
+        if (! is_array($eventData)) {
+            return null;
+        }
+
+        $obj = $eventData['object'] ?? null;
+        if (is_array($obj) && ($obj['object'] ?? null) === 'document') {
+            return $obj;
+        }
+
+        if ($obj === 'document' && isset($eventData['id'])) {
+            return $eventData;
         }
 
         return null;

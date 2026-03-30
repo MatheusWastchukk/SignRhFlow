@@ -4,6 +4,11 @@ services:
       context: ./signrhflow-api
       dockerfile: Dockerfile
     container_name: signrhflow_api
+    environment:
+      # Evita rate limit em Redis quando CACHE_STORE=redis mas o host "redis" não resolve (erro getaddrinfo).
+      # A fila de jobs continua usando Redis (QUEUE_CONNECTION=redis); mantenha o serviço redis na mesma rede.
+      CACHE_STORE: database
+      REDIS_HOST: redis
     ports:
       - "127.0.0.1:8001:8000"
     volumes:
@@ -22,12 +27,16 @@ services:
     networks:
       - signrhflow-network
 
+  # Obrigatório para webhooks da Autentique: ProcessWebhookJob roda na fila "webhooks".
   queue:
     build:
       context: ./signrhflow-api
       dockerfile: Dockerfile
     container_name: signrhflow_queue
     working_dir: /var/www/html
+    environment:
+      CACHE_STORE: database
+      REDIS_HOST: redis
     command: php artisan queue:work --queue=contracts,webhooks --tries=5 --sleep=1
     volumes:
       - ./signrhflow-api:/var/www/html
@@ -43,6 +52,7 @@ services:
 
   # Front: `ng build` + Nginx (estático). Rebuild após mudar código: docker compose build web --no-cache
   # WEB_BUILD_NG_API_URL no .env da raiz (opcional) define a API embutida no JS.
+  # Dev local (ng serve): docker-compose.dev.yml — não misture os dois serviços web na porta 4200.
   web:
     build:
       context: ./signrhflow-web

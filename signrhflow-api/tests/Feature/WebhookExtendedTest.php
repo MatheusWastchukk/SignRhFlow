@@ -158,6 +158,79 @@ class WebhookExtendedTest extends TestCase
         ]);
     }
 
+    public function test_autentique_v2_document_updated_flat_payload_maps_document_id(): void
+    {
+        Queue::fake();
+
+        $docId = '1cf7d351a96696fdf450ba893f6720463599dd8c34e0aeda803d';
+
+        $payload = [
+            'event' => [
+                'type' => 'document.updated',
+                'data' => [
+                    'id' => $docId,
+                    'object' => 'document',
+                    'signatures_count' => 1,
+                    'signed_count' => 1,
+                    'rejected_count' => 0,
+                ],
+            ],
+        ];
+
+        $this->postJson('/api/webhooks/autentique', $payload)->assertOk();
+
+        $this->assertDatabaseHas('webhook_logs', [
+            'autentique_document_id' => mb_strtolower($docId),
+            'event_type' => 'document.updated',
+        ]);
+    }
+
+    public function test_process_webhook_job_marks_contract_signed_from_document_updated_counts(): void
+    {
+        $employee = Employee::query()->create([
+            'name' => 'Doc Updated Signer',
+            'email' => 'doc.updated@example.com',
+            'phone' => '+5511987654321',
+            'cpf' => '52998224725',
+        ]);
+
+        $documentId = '1cf7d351a96696fdf450ba893f6720463599dd8c34e0aeda803d';
+
+        $contract = Contract::query()->create([
+            'employee_id' => $employee->id,
+            'autentique_document_id' => $documentId,
+            'status' => Contract::STATUS_PENDING,
+            'delivery_method' => Contract::DELIVERY_EMAIL,
+            'file_path' => 'contracts/doc-updated-test.pdf',
+        ]);
+
+        $log = WebhookLog::query()->create([
+            'event_hash' => hash('sha256', uniqid('doc_upd_', true)),
+            'autentique_document_id' => mb_strtolower($documentId),
+            'event_type' => 'document.updated',
+            'payload' => [
+                'event' => [
+                    'type' => 'document.updated',
+                    'data' => [
+                        'id' => $documentId,
+                        'object' => 'document',
+                        'signatures_count' => 1,
+                        'signed_count' => 1,
+                        'rejected_count' => 0,
+                    ],
+                ],
+            ],
+            'processed' => false,
+        ]);
+
+        (new ProcessWebhookJob($log->id))->handle();
+
+        $this->assertDatabaseHas('contracts', [
+            'id' => $contract->id,
+            'status' => Contract::STATUS_SIGNED,
+        ]);
+    }
+
     public function test_process_webhook_job_marks_contract_signed_for_signature_accepted(): void
     {
         $employee = Employee::query()->create([

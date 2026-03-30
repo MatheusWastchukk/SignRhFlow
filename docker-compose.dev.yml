@@ -1,0 +1,36 @@
+# Front em modo desenvolvimento (ng serve). Não altera o deploy da VPS (use só o docker-compose.yml lá).
+#
+# 1) Pare o container de produção do front (Nginx), se estiver rodando — mesma porta 4200:
+#    docker compose stop web
+#
+# 2) Suba API, banco e Redis (pode omitir "web"):
+#    docker compose up -d api db redis queue
+#
+# 3) Na MESMA pasta do repositório, suba só o dev server do Angular:
+#    docker compose -f docker-compose.dev.yml up web
+#
+# 4) signrhflow-web/.env → NG_API_URL=http://127.0.0.1:8001/api
+#
+# 5) Abra http://localhost:4200/  (não use 127.0.0.1:4200 só se o browser bloquear; os dois costumam funcionar no Docker Desktop)
+#
+# Nome do container diferente do deploy para evitar conflito: signrhflow_web_dev
+
+services:
+  web:
+    image: node:20-alpine
+    container_name: signrhflow_web_dev
+    working_dir: /app
+    volumes:
+      - ./signrhflow-web:/app
+    ports:
+      - "4200:4200"
+    command: >
+      sh -c "npm install &&
+      node scripts/sync-web-env.mjs &&
+      npm start -- --host 0.0.0.0 --port 4200 --poll 2000"
+    networks:
+      - signrhflow-network
+
+networks:
+  signrhflow-network:
+    driver: bridge

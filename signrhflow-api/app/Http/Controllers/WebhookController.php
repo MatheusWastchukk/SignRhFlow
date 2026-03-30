@@ -8,6 +8,7 @@ use App\Services\AutentiqueWebhookVerifier;
 use App\Support\Metrics;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
 
@@ -81,7 +82,11 @@ class WebhookController extends Controller
         $duplicate = ! $webhookLog->wasRecentlyCreated;
 
         if ($webhookLog->wasRecentlyCreated) {
-            ProcessWebhookJob::dispatch($webhookLog->id);
+            if (config('signrhflow.webhook_handle_sync')) {
+                Bus::dispatchSync(new ProcessWebhookJob($webhookLog->id));
+            } else {
+                ProcessWebhookJob::dispatch($webhookLog->id);
+            }
         }
 
         Log::info('webhook.autentique.received', [
@@ -139,22 +144,42 @@ class WebhookController extends Controller
      */
     private function resolveDocumentId(array $payload): string
     {
-        $fromEventObject = data_get($payload, 'event.data.object.id');
-        if (is_string($fromEventObject) && $fromEventObject !== '') {
-            return $fromEventObject;
-        }
+        $eventData = data_get($payload, 'event.data');
+        if (is_array($eventData)) {
+            $obj = $eventData['object'] ?? null;
 
-        $eventObject = data_get($payload, 'event.data.object');
-        if (is_array($eventObject) && ($eventObject['object'] ?? null) === 'signature') {
-            $doc = $eventObject['document'] ?? null;
-            if (is_string($doc) && $doc !== '') {
-                return $doc;
+            if (is_array($obj)) {
+                if (($obj['object'] ?? null) === 'signature') {
+                    $doc = $obj['document'] ?? null;
+                    if (is_string($doc) && $doc !== '') {
+                        return $doc;
+                    }
+                }
+                $nestedId = $obj['id'] ?? null;
+                if (is_string($nestedId) && $nestedId !== '') {
+                    return $nestedId;
+                }
             }
-        }
 
-        $fromSignaturePayload = data_get($payload, 'event.data.document');
-        if (is_string($fromSignaturePayload) && $fromSignaturePayload !== '') {
-            return $fromSignaturePayload;
+            // Formato plano da Autentique: event.data.object === "document" e id em event.data.id
+            if ($obj === 'document') {
+                $directId = $eventData['id'] ?? null;
+                if (is_string($directId) && $directId !== '') {
+                    return $directId;
+                }
+            }
+
+            if ($obj === 'signature') {
+                $doc = $eventData['document'] ?? null;
+                if (is_string($doc) && $doc !== '') {
+                    return $doc;
+                }
+            }
+
+            $fromDataDocument = $eventData['document'] ?? null;
+            if (is_string($fromDataDocument) && $fromDataDocument !== '') {
+                return $fromDataDocument;
+            }
         }
 
         $documentId = (string) data_get($payload, 'data.id', data_get($payload, 'document.id', data_get($payload, 'documento.uuid', '')));

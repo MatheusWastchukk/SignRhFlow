@@ -12,14 +12,17 @@ use App\Http\Middleware\VerifyMetricsToken;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Route;
 
+// O grupo "api" injeta throttle:api (alias). Excluir só a classe não remove o throttle — exige também "throttle:api".
+$withoutApiThrottle = [ThrottleRequests::class, 'throttle:api'];
+
 Route::get('health', HealthController::class)
-    ->withoutMiddleware([ThrottleRequests::class])
+    ->withoutMiddleware($withoutApiThrottle)
     ->name('api.health');
 
 if (filled((string) config('signrhflow.metrics_token'))) {
     Route::get('metrics', MetricsController::class)
         ->middleware([VerifyMetricsToken::class])
-        ->withoutMiddleware([ThrottleRequests::class])
+        ->withoutMiddleware($withoutApiThrottle)
         ->name('api.metrics');
 }
 
@@ -40,5 +43,5 @@ Route::post('signing/{token}/signer-data', [SigningController::class, 'signerDat
 Route::post('signing/{token}/sign', [SigningController::class, 'sign']);
 Route::post('signing/{token}/finalize', [SigningController::class, 'finalize']);
 Route::post('webhooks/autentique', [WebhookController::class, 'autentique'])
-    ->withoutMiddleware([ThrottleRequests::class])
+    ->withoutMiddleware($withoutApiThrottle)
     ->middleware('throttle:webhooks');

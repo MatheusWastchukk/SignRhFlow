@@ -1,5 +1,5 @@
-// Sobrescrito por `npm start` (prestart → scripts/sync-web-env.mjs)
+// Gerado por scripts/sync-web-env.mjs (NG_API_URL em .env)
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:8000/api',
+  apiBaseUrl: "https://matheuswastchuk.tech/SignRhFlow/api",
 };

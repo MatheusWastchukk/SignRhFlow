@@ -38,7 +38,7 @@ return [
     'autentique' => [
         'token' => env('AUTENTIQUE_API_TOKEN'),
         'graphql_url' => env('AUTENTIQUE_GRAPHQL_URL', 'https://api.autentique.com.br/v2/graphql'),
-        'webhook_secret' => env('AUTENTIQUE_WEBHOOK_SECRET'),
+        'webhook_secret' => trim((string) env('AUTENTIQUE_WEBHOOK_SECRET', '')),
         'panel_base_url' => env('AUTENTIQUE_PANEL_BASE_URL', 'https://painel.autentique.com.br'),
     ],
 
